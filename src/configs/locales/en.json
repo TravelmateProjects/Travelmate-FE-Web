@@ -1,0 +1,14 @@
+{
+  "welcome": "Welcome to Travelmate!",
+  "login": "Login",
+  "logout": "Logout",
+  "admin_home": "Admin Home",
+  "user_home": "User Home",
+  "dashboard": "Dashboard",
+  "manage_users": "Manage Users",
+  "settings": "Settings",
+  "profile": "Profile",
+  "expand_sidebar": "Expand sidebar",
+  "collapse_sidebar": "Collapse sidebar",
+  "language": "Language"
+}

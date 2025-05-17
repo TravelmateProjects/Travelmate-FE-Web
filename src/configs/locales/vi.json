@@ -1,0 +1,14 @@
+{
+  "welcome": "Chào mừng đến với Travelmate!",
+  "login": "Đăng nhập",
+  "logout": "Đăng xuất",
+  "admin_home": "Trang quản trị",
+  "user_home": "Trang người dùng",
+  "dashboard": "Bảng điều khiển",
+  "manage_users": "Quản lý người dùng",
+  "settings": "Cài đặt",
+  "profile": "Hồ sơ",
+  "expand_sidebar": "Mở rộng sidebar",
+  "collapse_sidebar": "Thu nhỏ sidebar",
+  "language": "Ngôn ngữ"
+}
