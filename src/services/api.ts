@@ -1,7 +1,9 @@
 import axios from 'axios';
+import { API_BASE_URL, API_TIMEOUT } from '../configs/api';
 
 const API = axios.create({
-  baseURL: 'https://localhost:5000',
+  baseURL: API_BASE_URL,
+  timeout: API_TIMEOUT,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -9,25 +11,33 @@ const API = axios.create({
 });
 
 // Add an interceptor to automatically refresh the token when the accessToken expires
-API.interceptors.response.use(
-  response => response,
-  async error => {
-    const originalRequest = error.config;
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      try {
-        // Call the refresh token API (assuming endpoint is /auth/refresh-token and backend returns new accessToken via cookie)
-        await API.post('/auth/refresh-token');
-        // After successful refresh, retry the original request
-        return API(originalRequest);
-      } catch (refreshError) {
-        // If refresh also fails, logout or redirect to login page if needed
-        // window.location.href = '/login';
-        return Promise.reject(refreshError);
-      }
-    }
-    return Promise.reject(error);
-  }
-);
+// API.interceptors.response.use(
+//   response => response,
+//   async error => {
+//     const originalRequest = error.config;
+    
+//     // Don't retry for refresh-token requests to avoid infinite loops
+//     if (
+//       error.response?.status === 401 && 
+//       !originalRequest._retry &&
+//       !originalRequest.url?.includes('/auth/refresh-token')
+//     ) {
+//       originalRequest._retry = true;
+//       try {
+//         // Call the refresh token API with platform parameter
+//         await API.post('/auth/refresh-token', { platform: 'web' });
+//         // After successful refresh, retry the original request
+//         return API(originalRequest);
+//       } catch (refreshError) {
+//         // If refresh also fails, redirect to login page
+//         console.error('Token refresh failed:', refreshError);
+//         // Có thể dispatch logout action hoặc redirect tới login
+//         // window.location.href = '/login';
+//         return Promise.reject(refreshError);
+//       }
+//     }
+//     return Promise.reject(error);
+//   }
+// );
 
 export default API;
