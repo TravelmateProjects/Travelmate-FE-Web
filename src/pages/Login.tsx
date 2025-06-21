@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Form, Button, Container, Row, Col, Alert, Spinner, Card } from 'react-bootstrap';
-import API from '../services/api';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
+import authService from '../services/authService';
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -11,19 +11,19 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { dispatch } = useAuth();
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     try {
-      const res = await API.post(
-        '/auth/login',
-        { username, password },
-        { withCredentials: true }
-      );
-    //   const { accessToken, account, user } = res.data;
-      const { account, user } = res.data; // Không lấy accessToken từ response nữa
+      const response = await authService.login({
+        username,
+        password,
+        platform: 'web'
+      });
+      
+      const { account, user } = response;
+      
       dispatch({
         type: 'LOGIN',
         payload: {
@@ -32,18 +32,21 @@ const Login: React.FC = () => {
             username: account.username,
             role: account.role,
             userId: account.userId,
-            // add more if needed
           },
-          accessToken: '', // Không lưu accessToken ở client, chỉ để trống
+          user: user,
         },
       });
+
+      // console.log('[Login] Login successful:', response);
+      
       if (account.role === 'admin') {
         navigate('/admin/home');
       } else {
         navigate('/user/home');
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      setError(error.response?.data?.message || 'Login failed');
     } finally {
       setLoading(false);
     }

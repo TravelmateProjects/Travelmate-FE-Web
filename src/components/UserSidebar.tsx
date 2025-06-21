@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Nav, Button, Stack, Card } from 'react-bootstrap';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import authService from '../services/authService';
 
 const SIDEBAR_WIDTH = 240;
 const SIDEBAR_COLLAPSED_WIDTH = 64;
@@ -11,9 +12,17 @@ const UserSidebar: React.FC = () => {
   const { state, dispatch } = useAuth();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
-  const [collapsed, setCollapsed] = useState(false);
-
-  const handleLogout = () => {
+  const [collapsed, setCollapsed] = useState(false);  const handleLogout = async () => {
+    try {
+      // Call logout API to remove httpOnly cookies on the server
+      await authService.logout();
+      console.log('[UserSidebar] Logout API called successfully');
+    } catch (error) {
+      console.error('[UserSidebar] Logout API failed:', error);
+      // Still proceed to logout even if API fails
+    }
+    
+    // Clear local state
     dispatch({ type: 'LOGOUT' });
     localStorage.removeItem('auth');
     navigate('/login');
