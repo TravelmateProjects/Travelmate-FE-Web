@@ -1,20 +1,21 @@
 import React from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
-import UserSidebar from '../components/UserSidebar';
+import { Outlet } from 'react-router-dom';
+import PartnerSidebar from '../components/PartnerSidebar';
 
-const UserLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const PartnerLayout: React.FC = () => {
   return (
     <Container fluid>
       <Row>
         <Col md={3} className="min-vh-100 p-0">
-          <UserSidebar />
+          <PartnerSidebar />
         </Col>
         <Col md={9} className="p-4">
-          {children}
+          <Outlet />
         </Col>
       </Row>
     </Container>
   );
 };
 
-export default UserLayout;
+export default PartnerLayout;

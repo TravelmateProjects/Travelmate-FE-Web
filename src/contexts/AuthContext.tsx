@@ -64,7 +64,7 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
             // Admin: only needs account
           action.payload.account.role === 'admin' ||
             // User: requires both account and user
-          (action.payload.account.role === 'user' && action.payload.user)
+          (action.payload.account.role === 'partner' && action.payload.user)
         )),
         account: action.payload.account,
         user: action.payload.user,
@@ -122,7 +122,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             // Admin: only needs account, user is not required
             (savedState.account.role === 'admin') ||
             // User: requires both account and user
-            (savedState.account.role === 'user' && savedState.user)
+            (savedState.account.role === 'partner' && savedState.user)
           );
 
           try {

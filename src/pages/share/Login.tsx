@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Form, Button, Container, Row, Col, Alert, Spinner, Card } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-import authService from '../services/authService';
+import { useAuth } from '../../hooks/useAuth';
+import authService from '../../services/authService';
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -41,8 +41,11 @@ const Login: React.FC = () => {
       
       if (account.role === 'admin') {
         navigate('/admin/home');
+      } else if (account.role === 'partner') {
+        navigate('/partner/home');
       } else {
-        navigate('/user/home');
+        setError('Bạn không có quyền truy cập vào hệ thống này.');
+        return;
       }
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } };
