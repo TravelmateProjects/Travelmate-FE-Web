@@ -1,13 +1,28 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { Spinner, Container } from 'react-bootstrap';
-import Login from '../pages/Login';
+import Login from '../pages/share/Login';
 import AdminHome from '../pages/admin/Home';
-import UserHome from '../pages/user/Home';
+import PartnerHome from '../pages/partner/Home';
 import AdminLayout from '../layouts/AdminLayout';
-import UserLayout from '../layouts/UserLayout';
+import PartnerLayout from '../layouts/PartnerLayout';
 import { useAuth } from '../hooks/useAuth';
 import '../configs/i18n';
+
+// Protected Route Component
+const ProtectedRoute: React.FC<{ allowedRole: string }> = ({ allowedRole }) => {
+  const { state } = useAuth();
+  
+  if (!state.isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (state.account?.role !== allowedRole) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  return <Outlet />;
+};
 
 const AppRoutes: React.FC = () => {
   const { state } = useAuth();
@@ -32,21 +47,43 @@ const AppRoutes: React.FC = () => {
   }
 
   console.log("[AppRoutes] Rendering routes, isAuthenticated:", state.isAuthenticated);
+  
   return (
     <Routes>
+      {/* Public Routes */}
       <Route path="/login" element={<Login />} />
-      <Route path="/admin/*" element={<AdminLayout><AdminHome /></AdminLayout>} />
-      <Route path="/user/*" element={<UserLayout><UserHome /></UserLayout>} />
+      
+      {/* Admin Routes */}
+      <Route element={<ProtectedRoute allowedRole="admin" />}>
+        <Route path="/admin/*" element={<AdminLayout />}>
+          <Route path="home" element={<AdminHome />} />
+          <Route path="" element={<Navigate to="home" replace />} />
+          {/* Add more admin routes here */}
+        </Route>
+      </Route>
+      
+      {/* Partner Routes */}
+      <Route element={<ProtectedRoute allowedRole="partner" />}>
+        <Route path="/partner/*" element={<PartnerLayout />}>
+          <Route path="home" element={<PartnerHome />} />
+          <Route path="" element={<Navigate to="home" replace />} />
+          {/* Add more partner routes here */}
+        </Route>
+      </Route>
+      
+      {/* Root Route - Redirect based on authentication */}
       <Route
         path="/"
         element={
           state.isAuthenticated
             ? state.account?.role === 'admin'
               ? <Navigate to="/admin/home" replace />
-              : <Navigate to="/user/home" replace />
+              : <Navigate to="/partner/home" replace />
             : <Navigate to="/login" replace />
         }
       />
+      
+      {/* Catch all route */}
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );

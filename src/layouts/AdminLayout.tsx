@@ -1,8 +1,9 @@
 import React from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
+import { Outlet } from 'react-router-dom';
 import AdminSidebar from '../components/AdminSidebar';
 
-const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const AdminLayout: React.FC = () => {
   return (
     <Container fluid>
       <Row>
@@ -10,7 +11,7 @@ const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           <AdminSidebar />
         </Col>
         <Col md={9} className="p-4">
-          {children}
+          <Outlet />
         </Col>
       </Row>
     </Container>
