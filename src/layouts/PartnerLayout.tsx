@@ -1,14 +1,14 @@
 import React from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
 import { Outlet } from 'react-router-dom';
-import UserSidebar from '../components/UserSidebar';
+import PartnerSidebar from '../components/PartnerSidebar';
 
-const UserLayout: React.FC = () => {
+const PartnerLayout: React.FC = () => {
   return (
     <Container fluid>
       <Row>
         <Col md={3} className="min-vh-100 p-0">
-          <UserSidebar />
+          <PartnerSidebar />
         </Col>
         <Col md={9} className="p-4">
           <Outlet />
@@ -18,4 +18,4 @@ const UserLayout: React.FC = () => {
   );
 };
 
-export default UserLayout;
+export default PartnerLayout;

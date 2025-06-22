@@ -1,11 +1,11 @@
 import React from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { Spinner, Container } from 'react-bootstrap';
-import Login from '../pages/Login';
+import Login from '../pages/share/Login';
 import AdminHome from '../pages/admin/Home';
-import UserHome from '../pages/user/Home';
+import PartnerHome from '../pages/partner/Home';
 import AdminLayout from '../layouts/AdminLayout';
-import UserLayout from '../layouts/UserLayout';
+import PartnerLayout from '../layouts/PartnerLayout';
 import { useAuth } from '../hooks/useAuth';
 import '../configs/i18n';
 
@@ -62,12 +62,12 @@ const AppRoutes: React.FC = () => {
         </Route>
       </Route>
       
-      {/* User Routes */}
-      <Route element={<ProtectedRoute allowedRole="user" />}>
-        <Route path="/user/*" element={<UserLayout />}>
-          <Route path="home" element={<UserHome />} />
+      {/* Partner Routes */}
+      <Route element={<ProtectedRoute allowedRole="partner" />}>
+        <Route path="/partner/*" element={<PartnerLayout />}>
+          <Route path="home" element={<PartnerHome />} />
           <Route path="" element={<Navigate to="home" replace />} />
-          {/* Add more user routes here */}
+          {/* Add more partner routes here */}
         </Route>
       </Route>
       
@@ -78,7 +78,7 @@ const AppRoutes: React.FC = () => {
           state.isAuthenticated
             ? state.account?.role === 'admin'
               ? <Navigate to="/admin/home" replace />
-              : <Navigate to="/user/home" replace />
+              : <Navigate to="/partner/home" replace />
             : <Navigate to="/login" replace />
         }
       />

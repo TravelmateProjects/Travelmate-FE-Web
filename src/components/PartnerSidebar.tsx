@@ -9,7 +9,7 @@ import authService from '../services/authService';
 const SIDEBAR_WIDTH = 240;
 const SIDEBAR_COLLAPSED_WIDTH = 64;
 
-const UserSidebar: React.FC = () => {
+const PartnerSidebar: React.FC = () => {
   const { state, dispatch } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -18,9 +18,9 @@ const UserSidebar: React.FC = () => {
     try {
       // Call logout API to remove httpOnly cookies on the server
       await authService.logout();
-      console.log('[UserSidebar] Logout API called successfully');
+      console.log('[PartnerSidebar] Logout API called successfully');
     } catch (error) {
-      console.error('[UserSidebar] Logout API failed:', error);
+      console.error('[PartnerSidebar] Logout API failed:', error);
       // Still proceed to logout even if API fails
     }
     
@@ -55,7 +55,7 @@ const UserSidebar: React.FC = () => {
           {!collapsed && (
             <div>
               <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 4 }}>👋 {t('welcome')}</div>
-              <div style={{ fontWeight: 700, fontSize: 20, letterSpacing: 1 }}>{state.account?.username || 'User'}</div>
+              <div style={{ fontWeight: 700, fontSize: 20, letterSpacing: 1 }}>{state.account?.username || 'Partner'}</div>
             </div>
           )}
             <Button
@@ -70,15 +70,15 @@ const UserSidebar: React.FC = () => {
         </div>
         <Stack gap={2} className="px-2 flex-grow-1 align-items-center" style={{ minHeight: 0 }}>
           <Nav.Link
-            href="/user/home"
+            href="/partner/home"
             className="text-white rounded-3 py-2 px-2 w-100 d-flex align-items-center justify-content-start"
             style={{ background: 'rgba(255,255,255,0.10)', fontWeight: 500 }}
           >
             <span role="img" aria-label="home" style={{ fontSize: 20, marginRight: collapsed ? 0 : 8 }}>🏠</span>
-            {!collapsed && t('user_home')}
+            {!collapsed && t('partner_home')}
           </Nav.Link>
           <Nav.Link
-            href="/user/profile"
+            href="/partner/profile"
             className="text-white rounded-3 py-2 px-2 w-100 d-flex align-items-center justify-content-start"
             style={{ background: 'rgba(255,255,255,0.10)', fontWeight: 500 }}
           >
@@ -86,7 +86,7 @@ const UserSidebar: React.FC = () => {
             {!collapsed && t('profile')}
           </Nav.Link>
           <Nav.Link
-            href="/user/settings"
+            href="/partner/settings"
             className="text-white rounded-3 py-2 px-2 w-100 d-flex align-items-center justify-content-start"
             style={{ background: 'rgba(255,255,255,0.10)', fontWeight: 500 }}
           >
@@ -133,4 +133,4 @@ const UserSidebar: React.FC = () => {
   );
 };
 
-export default UserSidebar;
+export default PartnerSidebar;
