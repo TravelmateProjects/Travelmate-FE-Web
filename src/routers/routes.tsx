@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { Spinner, Container } from 'react-bootstrap';
 import Login from '../pages/Login';
 import AdminHome from '../pages/admin/Home';
@@ -8,6 +8,21 @@ import AdminLayout from '../layouts/AdminLayout';
 import UserLayout from '../layouts/UserLayout';
 import { useAuth } from '../hooks/useAuth';
 import '../configs/i18n';
+
+// Protected Route Component
+const ProtectedRoute: React.FC<{ allowedRole: string }> = ({ allowedRole }) => {
+  const { state } = useAuth();
+  
+  if (!state.isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (state.account?.role !== allowedRole) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  return <Outlet />;
+};
 
 const AppRoutes: React.FC = () => {
   const { state } = useAuth();
@@ -32,11 +47,31 @@ const AppRoutes: React.FC = () => {
   }
 
   console.log("[AppRoutes] Rendering routes, isAuthenticated:", state.isAuthenticated);
+  
   return (
     <Routes>
+      {/* Public Routes */}
       <Route path="/login" element={<Login />} />
-      <Route path="/admin/*" element={<AdminLayout><AdminHome /></AdminLayout>} />
-      <Route path="/user/*" element={<UserLayout><UserHome /></UserLayout>} />
+      
+      {/* Admin Routes */}
+      <Route element={<ProtectedRoute allowedRole="admin" />}>
+        <Route path="/admin/*" element={<AdminLayout />}>
+          <Route path="home" element={<AdminHome />} />
+          <Route path="" element={<Navigate to="home" replace />} />
+          {/* Add more admin routes here */}
+        </Route>
+      </Route>
+      
+      {/* User Routes */}
+      <Route element={<ProtectedRoute allowedRole="user" />}>
+        <Route path="/user/*" element={<UserLayout />}>
+          <Route path="home" element={<UserHome />} />
+          <Route path="" element={<Navigate to="home" replace />} />
+          {/* Add more user routes here */}
+        </Route>
+      </Route>
+      
+      {/* Root Route - Redirect based on authentication */}
       <Route
         path="/"
         element={
@@ -47,6 +82,8 @@ const AppRoutes: React.FC = () => {
             : <Navigate to="/login" replace />
         }
       />
+      
+      {/* Catch all route */}
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
