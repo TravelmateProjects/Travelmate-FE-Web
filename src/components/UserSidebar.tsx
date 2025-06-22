@@ -3,6 +3,7 @@ import { Nav, Button, Stack, Card } from 'react-bootstrap';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../hooks/useLanguage';
 import authService from '../services/authService';
 
 const SIDEBAR_WIDTH = 240;
@@ -11,8 +12,9 @@ const SIDEBAR_COLLAPSED_WIDTH = 64;
 const UserSidebar: React.FC = () => {
   const { state, dispatch } = useAuth();
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation();
-  const [collapsed, setCollapsed] = useState(false);  const handleLogout = async () => {
+  const { t } = useTranslation();
+  const { language, setLanguage } = useLanguage();
+  const [collapsed, setCollapsed] = useState(false);const handleLogout = async () => {
     try {
       // Call logout API to remove httpOnly cookies on the server
       await authService.logout();
@@ -103,12 +105,12 @@ const UserSidebar: React.FC = () => {
                   className="form-check-input"
                   type="checkbox"
                   id="langSwitchUser"
-                  checked={i18n.language === 'en'}
-                  onChange={() => i18n.changeLanguage(i18n.language === 'vi' ? 'en' : 'vi')}
+                  checked={language === 'en'}
+                  onChange={() => setLanguage(language === 'vi' ? 'en' : 'vi')}
                   style={{ cursor: 'pointer' }}
                 />
                 <label className="form-check-label" htmlFor="langSwitchUser" style={{ fontSize: 13, marginLeft: 8 }}>
-                  {i18n.language === 'vi' ? 'VI' : 'EN'}
+                  {language === 'vi' ? 'VI' : 'EN'}
                 </label>
               </div>
             </div>
