@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { Nav, Button, Stack, Card } from 'react-bootstrap';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useLanguage } from '../hooks/useLanguage'
-import authService from '../services/authService';
+import { useLanguage } from '../../hooks/useLanguage';
+import authService from '../../services/authService';
 
 const SIDEBAR_WIDTH = 240;
 const SIDEBAR_COLLAPSED_WIDTH = 64;
 
-const AdminSidebar: React.FC = () => {
+const PartnerSidebar: React.FC = () => {
   const { state, dispatch } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -18,10 +18,10 @@ const AdminSidebar: React.FC = () => {
     try {
       // Call logout API to remove httpOnly cookies on the server
       await authService.logout();
-      console.log('[AdminSidebar] Logout API called successfully');
+      console.log('[PartnerSidebar] Logout API called successfully');
     } catch (error) {
-      console.error('[AdminSidebar] Logout API failed:', error);
-      // Still proceed to logout even if the API fails
+      console.error('[PartnerSidebar] Logout API failed:', error);
+      // Still proceed to logout even if API fails
     }
     
     // Clear local state
@@ -37,12 +37,12 @@ const AdminSidebar: React.FC = () => {
         border: 'none',
         borderRadius: 0,
         background: collapsed
-          ? '#212529'
-          : 'linear-gradient(180deg, #212529 0%, #495057 100%)',
+          ? '#1976d2'
+          : 'linear-gradient(180deg, #1976d2 0%, #42a5f5 100%)',
         color: '#fff',
         width: collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH,
         transition: 'width 0.2s, background 0.2s',
-        position: 'fixed',
+        position: 'fixed', // fix sidebar to the left
         left: 0,
         top: 0,
         bottom: 0,
@@ -55,44 +55,45 @@ const AdminSidebar: React.FC = () => {
           {!collapsed && (
             <div>
               <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 4 }}>👋 {t('welcome')}</div>
-              <div style={{ fontWeight: 700, fontSize: 20, letterSpacing: 1 }}>{state.account?.username || 'Admin'}</div>
+              <div style={{ fontWeight: 700, fontSize: 20, letterSpacing: 1 }}>{state.account?.username || 'Partner'}</div>
             </div>
           )}
-          <Button
+            <Button
             variant="outline-light"
             size="sm"
             style={{ border: 'none', boxShadow: 'none', minWidth: 32, minHeight: 32, padding: 0 }}
             onClick={() => setCollapsed((c) => !c)}
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
+            >
             {collapsed ? <span style={{ fontSize: 20 }}>»</span> : <span style={{ fontSize: 20 }}>«</span>}
           </Button>
         </div>
         <Stack gap={2} className="px-2 flex-grow-1 align-items-center" style={{ minHeight: 0 }}>
           <Nav.Link
-            href="/admin/home"
+            href="/partner/home"
             className="text-white rounded-3 py-2 px-2 w-100 d-flex align-items-center justify-content-start"
             style={{ background: 'rgba(255,255,255,0.10)', fontWeight: 500 }}
           >
-            <span role="img" aria-label="dashboard" style={{ fontSize: 20, marginRight: collapsed ? 0 : 8 }}>📊</span>
-            {!collapsed && t('admin_home')}
+            <span role="img" aria-label="home" style={{ fontSize: 20, marginRight: collapsed ? 0 : 8 }}>🏠</span>
+            {!collapsed && t('partner_home')}
           </Nav.Link>
           <Nav.Link
-            href="/admin/users"
+            href="/partner/profile"
             className="text-white rounded-3 py-2 px-2 w-100 d-flex align-items-center justify-content-start"
             style={{ background: 'rgba(255,255,255,0.10)', fontWeight: 500 }}
           >
-            <span role="img" aria-label="users" style={{ fontSize: 20, marginRight: collapsed ? 0 : 8 }}>👥</span>
-            {!collapsed && t('manage_users')}
+            <span role="img" aria-label="profile" style={{ fontSize: 20, marginRight: collapsed ? 0 : 8 }}>👤</span>
+            {!collapsed && t('profile')}
           </Nav.Link>
           <Nav.Link
-            href="/admin/settings"
+            href="/partner/settings"
             className="text-white rounded-3 py-2 px-2 w-100 d-flex align-items-center justify-content-start"
             style={{ background: 'rgba(255,255,255,0.10)', fontWeight: 500 }}
           >
             <span role="img" aria-label="settings" style={{ fontSize: 20, marginRight: collapsed ? 0 : 8 }}>⚙️</span>
             {!collapsed && t('settings')}
           </Nav.Link>
+          {/* Add more partner-specific links here */}
         </Stack>
         { !collapsed && (
           <div className="px-3 pb-2 d-flex align-items-center justify-content-between">
@@ -104,12 +105,12 @@ const AdminSidebar: React.FC = () => {
                 <input
                   className="form-check-input"
                   type="checkbox"
-                  id="langSwitch"
+                  id="langSwitchUser"
                   checked={language === 'en'}
                   onChange={() => setLanguage(language === 'vi' ? 'en' : 'vi')}
                   style={{ cursor: 'pointer' }}
                 />
-                <label className="form-check-label" htmlFor="langSwitch" style={{ fontSize: 13, marginLeft: 8 }}>
+                <label className="form-check-label" htmlFor="langSwitchUser" style={{ fontSize: 13, marginLeft: 8 }}>
                   {language === 'vi' ? 'VI' : 'EN'}
                 </label>
               </div>
@@ -133,4 +134,4 @@ const AdminSidebar: React.FC = () => {
   );
 };
 
-export default AdminSidebar;
+export default PartnerSidebar;
