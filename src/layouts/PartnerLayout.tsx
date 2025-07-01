@@ -1,7 +1,7 @@
 import React from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
 import { Outlet } from 'react-router-dom';
-import PartnerSidebar from '../components/PartnerSidebar';
+import PartnerSidebar from '../components/partner/PartnerSidebar';
 
 const PartnerLayout: React.FC = () => {
   return (
