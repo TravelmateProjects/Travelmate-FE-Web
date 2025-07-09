@@ -61,6 +61,39 @@ class AuthService {
       throw error;
     }
   }
+
+  /**
+   * Gửi email quên mật khẩu
+   */
+  async forgotPassword(data: { email: string }): Promise<void> {
+    try {
+      await API.post('/auth/forgot-password', data);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Xác thực OTP quên mật khẩu
+   */
+  async verifyForgotOtp(data: { email: string; otp: string }): Promise<void> {
+    try {
+      await API.post('/auth/verify-forgot-otp', data);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Đặt lại mật khẩu mới
+   */
+  async resetPassword(data: { email: string; otp: string; newPassword: string }): Promise<void> {
+    try {
+      await API.post('/auth/reset-password', data);
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 export default new AuthService();

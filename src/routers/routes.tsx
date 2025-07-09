@@ -2,6 +2,9 @@ import React from "react";
 import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { Spinner, Container } from "react-bootstrap";
 import Login from "../pages/share/Login";
+import ForgotPassword from "../pages/share/ForgotPassword";
+import VerifyOtp from "../pages/share/VerifyOtp";
+import ResetPassword from "../pages/share/ResetPassword";
 import AdminHome from "../pages/admin/Home";
 import PartnerHome from "../pages/partner/Home";
 import AdminLayout from "../layouts/AdminLayout";
@@ -62,6 +65,9 @@ const AppRoutes: React.FC = () => {
     <Routes>
       {/* Public Routes */}
       <Route path="/login" element={<Login />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/verify-otp" element={<VerifyOtp />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
 
       {/* Admin Routes */}
       <Route element={<ProtectedRoute allowedRole="admin" />}>
