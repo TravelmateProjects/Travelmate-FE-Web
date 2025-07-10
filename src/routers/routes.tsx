@@ -16,6 +16,8 @@ import AddBlog from "../pages/partner/blog/AddBlog";
 import UpdateBlog from "../pages/partner/blog/UpdateBlog";
 import ViewBlog from "../pages/partner/blog/ViewBlog";
 import PartnerProfile from '../pages/partner/Profile';
+import CreatePartner from '../pages/admin/CreatePartner';
+import ForceChangePassword from '../pages/partner/ForceChangePassword';
 // Protected Route Component
 const ProtectedRoute: React.FC<{ allowedRole: string }> = ({ allowedRole }) => {
   const { state } = useAuth();
@@ -74,6 +76,7 @@ const AppRoutes: React.FC = () => {
       <Route element={<ProtectedRoute allowedRole="admin" />}>
         <Route path="/admin/*" element={<AdminLayout />}>
           <Route path="home" element={<AdminHome />} />
+          <Route path="create-partner" element={<CreatePartner />} />
           <Route path="" element={<Navigate to="home" replace />} />
           {/* Add more admin routes here */}
         </Route>

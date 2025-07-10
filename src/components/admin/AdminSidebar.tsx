@@ -86,6 +86,14 @@ const AdminSidebar: React.FC = () => {
             {!collapsed && t('manage_users')}
           </Nav.Link>
           <Nav.Link
+            href="/admin/create-partner"
+            className="text-white rounded-3 py-2 px-2 w-100 d-flex align-items-center justify-content-start"
+            style={{ background: 'rgba(255,255,255,0.10)', fontWeight: 500 }}
+          >
+            <span role="img" aria-label="add-partner" style={{ fontSize: 20, marginRight: collapsed ? 0 : 8 }}>➕</span>
+            {!collapsed && t('create_partner')}
+          </Nav.Link>
+          <Nav.Link
             href="/admin/settings"
             className="text-white rounded-3 py-2 px-2 w-100 d-flex align-items-center justify-content-start"
             style={{ background: 'rgba(255,255,255,0.10)', fontWeight: 500 }}
