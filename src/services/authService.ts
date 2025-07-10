@@ -61,6 +61,61 @@ class AuthService {
       throw error;
     }
   }
+
+  /**
+   * Gửi email quên mật khẩu
+   */
+  async forgotPassword(data: { email: string }): Promise<void> {
+    try {
+      await API.post('/auth/forgot-password', data);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Xác thực OTP quên mật khẩu
+   */
+  async verifyForgotOtp(data: { email: string; otp: string }): Promise<void> {
+    try {
+      await API.post('/auth/verify-forgot-otp', data);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Đặt lại mật khẩu mới
+   */
+  async resetPassword(data: { email: string; otp: string; newPassword: string }): Promise<void> {
+    try {
+      await API.post('/auth/reset-password', data);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Tạo partner mới (admin)
+   */
+  async createPartner(data: { fullName: string; email: string; phone: string; username: string }): Promise<void> {
+    try {
+      await API.post('/auth/create-partner', data);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Đổi mật khẩu khi đã đăng nhập
+   */
+  async changePassword(data: { oldPassword: string; newPassword: string; confirmPassword: string }): Promise<void> {
+    try {
+      await API.post('/auth/change-password', data, { withCredentials: true });
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 export default new AuthService();

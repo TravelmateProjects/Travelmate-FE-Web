@@ -1,10 +1,36 @@
+// PartnerSidebar.tsx
 import React, { useState } from "react";
-import { Nav, Button, Stack, Card } from "react-bootstrap";
+import {
+  Nav,
+  Button,
+  Stack,
+  Card,
+  Collapse,
+  OverlayTrigger,
+  Tooltip,
+} from "react-bootstrap";
+import {
+  FiChevronLeft,
+  FiChevronRight,
+  FiHome,
+  FiUser,
+  FiSettings,
+  FiLogOut,
+  FiEdit3,
+  FiKey,
+} from "react-icons/fi";
 import { useAuth } from "../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "../../hooks/useLanguage";
 import authService from "../../services/authService";
+import SidebarItem from "./SidebarItem";
+import { FiChevronDown, FiChevronUp, } from "react-icons/fi";
+import { FiImage } from "react-icons/fi";
+import { motion, AnimatePresence } from "framer-motion";
+
+
+
 
 const SIDEBAR_WIDTH = 240;
 const SIDEBAR_COLLAPSED_WIDTH = 64;
@@ -14,18 +40,17 @@ const PartnerSidebar: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { language, setLanguage } = useLanguage();
+
   const [collapsed, setCollapsed] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
   const handleLogout = async () => {
     try {
-      // Call logout API to remove httpOnly cookies on the server
       await authService.logout();
       console.log("[PartnerSidebar] Logout API called successfully");
     } catch (error) {
       console.error("[PartnerSidebar] Logout API failed:", error);
-      // Still proceed to logout even if API fails
     }
-
-    // Clear local state
     dispatch({ type: "LOGOUT" });
     localStorage.removeItem("auth");
     navigate("/login");
@@ -34,34 +59,26 @@ const PartnerSidebar: React.FC = () => {
   return (
     <Card
       style={{
-        minHeight: "100vh",
-        border: "none",
-        borderRadius: 0,
-        background: collapsed
-          ? "#1976d2"
-          : "linear-gradient(180deg, #1976d2 0%, #42a5f5 100%)",
-        color: "#fff",
         width: collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH,
-        transition: "width 0.2s, background 0.2s",
-        position: "fixed", // fix sidebar to the left
-        left: 0,
-        top: 0,
-        bottom: 0,
-        zIndex: 1030,
-        boxShadow: "2px 0 8px 0 rgba(0,0,0,0.04)",
+        transition: "all 0.3s ease",
+        background: collapsed
+          ? "#0d47a1"
+          : "linear-gradient(180deg, #0d47a1 0%, #2196f3 100%)",
+        color: "#fff",
+        position: "fixed",
+        height: "100vh",
+        zIndex: 1000,
+        borderRadius: 0,
+        boxShadow: "2px 0 10px rgba(0,0,0,0.1)",
       }}
     >
-      <Card.Body className="d-flex flex-column p-0" style={{ height: "100%" }}>
-        <div
-          className="d-flex align-items-center justify-content-between p-3 border-bottom border-white-50 mb-3"
-          style={{ minHeight: 72 }}
-        >
+      <Card.Body className="d-flex flex-column p-0">
+        {/* Header */}
+        <div className="d-flex align-items-center justify-content-between px-3 py-3 border-bottom border-white-25">
           {!collapsed && (
             <div>
-              <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 4 }}>
-                👋 {t("welcome")}
-              </div>
-              <div style={{ fontWeight: 700, fontSize: 20, letterSpacing: 1 }}>
+              <div style={{ fontWeight: 600, fontSize: 16 }}>👋 {t("welcome")}</div>
+              <div style={{ fontWeight: 700, fontSize: 18 }}>
                 {state.account?.username || "Partner"}
               </div>
             </div>
@@ -69,129 +86,130 @@ const PartnerSidebar: React.FC = () => {
           <Button
             variant="outline-light"
             size="sm"
-            style={{
-              border: "none",
-              boxShadow: "none",
-              minWidth: 32,
-              minHeight: 32,
-              padding: 0,
-            }}
-            onClick={() => setCollapsed((c) => !c)}
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className="d-flex align-items-center justify-content-center"
+            style={{ border: "none", boxShadow: "none", width: 32, height: 32 }}
+            onClick={() => setCollapsed(!collapsed)}
           >
-            {collapsed ? (
-              <span style={{ fontSize: 20 }}>»</span>
-            ) : (
-              <span style={{ fontSize: 20 }}>«</span>
-            )}
+            {collapsed ? <FiChevronRight size={20} /> : <FiChevronLeft size={20} />}
           </Button>
         </div>
-        <Stack
-          gap={2}
-          className="px-2 flex-grow-1 align-items-center"
-          style={{ minHeight: 0 }}
-        >
-          <Nav.Link
-            href="/partner/home"
-            className="text-white rounded-3 py-2 px-2 w-100 d-flex align-items-center justify-content-start"
-            style={{ background: "rgba(255,255,255,0.10)", fontWeight: 500 }}
-          >
-            <span
-              role="img"
-              aria-label="home"
-              style={{ fontSize: 20, marginRight: collapsed ? 0 : 8 }}
-            >
-              🏠
-            </span>
-            {!collapsed && t("partner_home")}
-          </Nav.Link>
-          <Nav.Link
-            href="/partner/profile"
-            className="text-white rounded-3 py-2 px-2 w-100 d-flex align-items-center justify-content-start"
-            style={{ background: "rgba(255,255,255,0.10)", fontWeight: 500 }}
-          >
-            <span
-              role="img"
-              aria-label="profile"
-              style={{ fontSize: 20, marginRight: collapsed ? 0 : 8 }}
-            >
-              👤
-            </span>
-            {!collapsed && t("profile")}
-          </Nav.Link>
-          <Nav.Link
-            href="/partner/settings"
-            className="text-white rounded-3 py-2 px-2 w-100 d-flex align-items-center justify-content-start"
-            style={{ background: "rgba(255,255,255,0.10)", fontWeight: 500 }}
-          >
-            <span
-              role="img"
-              aria-label="settings"
-              style={{ fontSize: 20, marginRight: collapsed ? 0 : 8 }}
-            >
-              ⚙️
-            </span>
-            {!collapsed && t("settings")}
-          </Nav.Link>
-          {/* Add more partner-specific links here */}
-          <Nav.Link
-            href="/partner/blog"
-            className="text-white rounded-3 py-2 px-2 w-100 d-flex align-items-center justify-content-start"
-            style={{ background: "rgba(255,255,255,0.10)", fontWeight: 500 }}
-          >
-            <span
-              role="img"
-              aria-label="blog"
-              style={{ fontSize: 20, marginRight: collapsed ? 0 : 8 }}
-            >
-              📝
-            </span>
-            {!collapsed && "Blog"}
-          </Nav.Link>
+
+        {/* Navigation */}
+        <Stack className="px-2 py-3" gap={2}>
+          <SidebarItem
+            collapsed={collapsed}
+            icon={<FiHome size={18} />}
+            label={t("partner_home")}
+            onClick={() => navigate("/partner/home")}
+          />
+          <SidebarItem
+            collapsed={collapsed}
+            icon={<FiUser size={18} />}
+            label={t("profile")}
+            onClick={() =>
+              window.location.pathname === "/partner/profile"
+                ? window.location.reload()
+                : navigate("/partner/profile")
+            }
+          />
+          <SidebarItem
+            collapsed={collapsed}
+            icon={<FiSettings size={18} />}
+            label={t("settings")}
+            onClick={() => setSettingsOpen(!settingsOpen)}
+            rightIcon={
+              !collapsed &&
+              (settingsOpen ? (
+                <FiChevronUp size={16} />
+              ) : (
+                <FiChevronDown size={16} />)
+              )
+            }
+          />
+
+
+<AnimatePresence initial={false}>
+  {settingsOpen && !collapsed && (
+    <motion.div
+      className="ms-2"
+      initial={{ height: 0, opacity: 0 }}
+      animate={{ height: "auto", opacity: 1 }}
+      exit={{ height: 0, opacity: 0 }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
+    >
+      <SidebarItem
+        collapsed={false}
+        icon={<FiKey size={16} />}
+        label={t("change_password")}
+        onClick={() => navigate("/partner/change-password")}
+        style={{
+          background: "rgba(255,255,255,0.1)",
+          color: "#fff",
+          fontWeight: 500,
+          paddingLeft: 32,
+          borderRadius: 6,
+        }}
+      />
+    </motion.div>
+  )}
+</AnimatePresence>
+
+
+          <SidebarItem
+            collapsed={collapsed}
+            icon={<FiEdit3 size={18} />}
+            label="Blog"
+            onClick={() => navigate("/partner/blog")}
+          />
+          <SidebarItem
+            collapsed={collapsed}
+            icon={<FiImage size={18} />}
+            label="Albums"
+            onClick={() => navigate("/partner/albums")}
+          />
         </Stack>
+
+        {/* Language Switch */}
         {!collapsed && (
-          <div className="px-3 pb-2 d-flex align-items-center justify-content-between">
-            <div style={{ fontSize: 13, color: "#ccc", marginBottom: 4 }}>
-              {t("language")}:
-            </div>
-            <div style={{ minWidth: 48 }}>
-              <div className="form-check form-switch m-0">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  id="langSwitchUser"
-                  checked={language === "en"}
-                  onChange={() => setLanguage(language === "vi" ? "en" : "vi")}
-                  style={{ cursor: "pointer" }}
-                />
-                <label
-                  className="form-check-label"
-                  htmlFor="langSwitchUser"
-                  style={{ fontSize: 13, marginLeft: 8 }}
-                >
-                  {language === "vi" ? "VI" : "EN"}
-                </label>
-              </div>
+          <div className="px-3 pb-2 d-flex align-items-center justify-content-between mt-auto">
+            <small>{t("language")}:</small>
+            <div className="form-check form-switch">
+              <input
+                className="form-check-input"
+                type="checkbox"
+                id="langSwitch"
+                checked={language === "en"}
+                onChange={() => setLanguage(language === "vi" ? "en" : "vi")}
+              />
+              <label className="form-check-label ms-2" htmlFor="langSwitch">
+                {language.toUpperCase()}
+              </label>
             </div>
           </div>
         )}
-        <div className="mt-auto p-3 d-flex justify-content-center">
+
+        {/* Logout */}
+        <div className="px-3 pb-3">
           <Button
-            variant="light"
-            size="sm"
-            className="w-100 fw-bold"
             onClick={handleLogout}
-            style={{ fontSize: 14, padding: collapsed ? "0.5rem" : undefined }}
+            className="w-100 d-flex align-items-center justify-content-center fw-bold"
+            style={{
+              background: "#fff",
+              color: "#1976d2",
+              border: "none",
+              borderRadius: 8,
+              padding: collapsed ? "8px" : "8px 16px",
+              fontSize: 14,
+              transition: "all 0.2s ease-in-out",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "#e3f2fd")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "#fff")}
             title={t("logout")}
           >
-            {collapsed ? (
-              <span role="img" aria-label="logout">
-                🚪
-              </span>
-            ) : (
-              t("logout")
-            )}
+            <FiLogOut size={18} style={{ marginRight: collapsed ? 0 : 8 }} />
+            {!collapsed && t("logout")}
           </Button>
+
         </div>
       </Card.Body>
     </Card>

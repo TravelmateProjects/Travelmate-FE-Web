@@ -2,6 +2,9 @@ import React from "react";
 import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { Spinner, Container } from "react-bootstrap";
 import Login from "../pages/share/Login";
+import ForgotPassword from "../pages/share/ForgotPassword";
+import VerifyOtp from "../pages/share/VerifyOtp";
+import ResetPassword from "../pages/share/ResetPassword";
 import AdminHome from "../pages/admin/Home";
 import PartnerHome from "../pages/partner/Home";
 import AdminLayout from "../layouts/AdminLayout";
@@ -13,6 +16,10 @@ import AddBlog from "../pages/partner/blog/AddBlog";
 import UpdateBlog from "../pages/partner/blog/UpdateBlog";
 import ViewBlog from "../pages/partner/blog/ViewBlog";
 import AlbumsManagement from "../pages/partner/albums/AlbumsManagement";
+import PartnerProfile from '../pages/partner/Profile';
+import CreatePartner from '../pages/admin/CreatePartner';
+import ChangePassword from '../pages/partner/ChangePassword';
+
 // Protected Route Component
 const ProtectedRoute: React.FC<{ allowedRole: string }> = ({ allowedRole }) => {
   const { state } = useAuth();
@@ -63,11 +70,15 @@ const AppRoutes: React.FC = () => {
     <Routes>
       {/* Public Routes */}
       <Route path="/login" element={<Login />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/verify-otp" element={<VerifyOtp />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
 
       {/* Admin Routes */}
       <Route element={<ProtectedRoute allowedRole="admin" />}>
         <Route path="/admin/*" element={<AdminLayout />}>
           <Route path="home" element={<AdminHome />} />
+          <Route path="create-partner" element={<CreatePartner />} />
           <Route path="" element={<Navigate to="home" replace />} />
           {/* Add more admin routes here */}
         </Route>
@@ -77,6 +88,7 @@ const AppRoutes: React.FC = () => {
       <Route element={<ProtectedRoute allowedRole="partner" />}>
         <Route path="/partner/*" element={<PartnerLayout />}>
           <Route path="home" element={<PartnerHome />} />
+          <Route path="profile" element={<PartnerProfile />} />
           <Route path="" element={<Navigate to="home" replace />} />
           {/* Add more partner routes here */}
           <Route path="blog" element={<BlogManagement />} />
@@ -84,6 +96,7 @@ const AppRoutes: React.FC = () => {
           <Route path="blog/edit/:id" element={<UpdateBlog />} />
           <Route path="blog/view/:id" element={<ViewBlog id={""} />} />
           <Route path="albums" element={<AlbumsManagement />} />
+          <Route path="change-password" element={<ChangePassword />} />
           {/* Placeholder, cần modal */}
         </Route>
       </Route>
