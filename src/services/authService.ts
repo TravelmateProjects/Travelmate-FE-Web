@@ -105,6 +105,17 @@ class AuthService {
       throw error;
     }
   }
+
+  /**
+   * Đổi mật khẩu khi đã đăng nhập
+   */
+  async changePassword(data: { oldPassword: string; newPassword: string; confirmPassword: string }): Promise<void> {
+    try {
+      await API.post('/auth/change-password', data, { withCredentials: true });
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 export default new AuthService();
