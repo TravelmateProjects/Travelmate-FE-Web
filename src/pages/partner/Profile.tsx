@@ -7,6 +7,7 @@ import ViewBlog from './blog/ViewBlog';
 import API from '../../services/api';
 import { useLocation } from 'react-router-dom';
 import locationVN from '../../constants/locationVN.json';
+import avatarDefault from '../../images/avatar_default.png';
 
 const coverHeight = 300;
 const avatarSize = 160;
@@ -267,7 +268,7 @@ const PartnerProfile: React.FC = () => {
       >
         <div style={{ position: 'relative', width: avatarSize, height: avatarSize }}>
           <img
-            src={avatarPreview || user?.avatar?.url || '/default-avatar.png'}
+            src={avatarPreview || user?.avatar?.url || avatarDefault}
             style={{
               width: '100%',
               height: '100%',

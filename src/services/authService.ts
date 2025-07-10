@@ -94,6 +94,17 @@ class AuthService {
       throw error;
     }
   }
+
+  /**
+   * Tạo partner mới (admin)
+   */
+  async createPartner(data: { fullName: string; email: string; phone: string; username: string }): Promise<void> {
+    try {
+      await API.post('/auth/create-partner', data);
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 export default new AuthService();
