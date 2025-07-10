@@ -28,7 +28,7 @@ interface Blog {
 interface Comment {
   _id: string;
   commentText: string;
-  commenterId: { fullName: string; avatar: string };
+  commenterId: { fullName: string; avatar: { url: string; publicId: string } };
   createdAt: string;
 }
 
@@ -72,6 +72,7 @@ const ViewBlog: React.FC<ViewBlogProps> = ({ id, isModal = false }) => {
 
         // Fetch comments
         const commentsResponse = await API.get(`/blog/comments/${id}`);
+        console.log("Comments:", commentsResponse.data.comments); // Debug
         setComments(commentsResponse.data.comments);
       } catch {
         setError("Không thể tải bài viết hoặc dữ liệu liên quan!");
@@ -242,10 +243,13 @@ const ViewBlog: React.FC<ViewBlogProps> = ({ id, isModal = false }) => {
                 className="mb-2 align-items-start"
               >
                 <Image
-                  src={comment.commenterId.avatar || defaultAvatar}
+                  src={comment.commenterId.avatar?.url || defaultAvatar}
                   roundedCircle
                   width={32}
                   height={32}
+                  onError={(e) => {
+                    e.currentTarget.src = defaultAvatar; // Fallback nếu ảnh lỗi
+                  }}
                 />
                 <div
                   className="p-2"
