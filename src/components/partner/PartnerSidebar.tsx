@@ -106,7 +106,13 @@ const PartnerSidebar: React.FC = () => {
             {!collapsed && t("partner_home")}
           </Nav.Link>
           <Nav.Link
-            href="/partner/profile"
+            onClick={() => {
+              if (window.location.pathname === '/partner/profile') {
+                window.location.reload();
+              } else {
+                navigate('/partner/profile');
+              }
+            }}
             className="text-white rounded-3 py-2 px-2 w-100 d-flex align-items-center justify-content-start"
             style={{ background: "rgba(255,255,255,0.10)", fontWeight: 500 }}
           >
