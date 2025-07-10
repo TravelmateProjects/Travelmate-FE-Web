@@ -15,9 +15,11 @@ import BlogManagement from "../pages/partner/blog/BlogManagement";
 import AddBlog from "../pages/partner/blog/AddBlog";
 import UpdateBlog from "../pages/partner/blog/UpdateBlog";
 import ViewBlog from "../pages/partner/blog/ViewBlog";
+import AlbumsManagement from "../pages/partner/albums/AlbumsManagement";
 import PartnerProfile from '../pages/partner/Profile';
 import CreatePartner from '../pages/admin/CreatePartner';
 import ChangePassword from '../pages/partner/ChangePassword';
+
 // Protected Route Component
 const ProtectedRoute: React.FC<{ allowedRole: string }> = ({ allowedRole }) => {
   const { state } = useAuth();
@@ -92,7 +94,8 @@ const AppRoutes: React.FC = () => {
           <Route path="blog" element={<BlogManagement />} />
           <Route path="blog/add" element={<AddBlog />} />
           <Route path="blog/edit/:id" element={<UpdateBlog />} />
-          <Route path="blog/view/:id" element={<ViewBlog />} />
+          <Route path="blog/view/:id" element={<ViewBlog id={""} />} />
+          <Route path="albums" element={<AlbumsManagement />} />
           <Route path="change-password" element={<ChangePassword />} />
           {/* Placeholder, cần modal */}
         </Route>
