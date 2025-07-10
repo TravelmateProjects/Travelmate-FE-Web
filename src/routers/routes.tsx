@@ -15,6 +15,7 @@ import BlogManagement from "../pages/partner/blog/BlogManagement";
 import AddBlog from "../pages/partner/blog/AddBlog";
 import UpdateBlog from "../pages/partner/blog/UpdateBlog";
 import ViewBlog from "../pages/partner/blog/ViewBlog";
+import PartnerProfile from '../pages/partner/Profile';
 // Protected Route Component
 const ProtectedRoute: React.FC<{ allowedRole: string }> = ({ allowedRole }) => {
   const { state } = useAuth();
@@ -82,6 +83,7 @@ const AppRoutes: React.FC = () => {
       <Route element={<ProtectedRoute allowedRole="partner" />}>
         <Route path="/partner/*" element={<PartnerLayout />}>
           <Route path="home" element={<PartnerHome />} />
+          <Route path="profile" element={<PartnerProfile />} />
           <Route path="" element={<Navigate to="home" replace />} />
           {/* Add more partner routes here */}
           <Route path="blog" element={<BlogManagement />} />
