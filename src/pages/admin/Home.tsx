@@ -50,6 +50,39 @@ const AdminHome: React.FC = () => {
     return Math.ceil(dataLen / 15);
   };
 
+  // Thêm hàm formatDate
+  const formatDate = (dateStr: string) => {
+    // Nếu là tuần: yyyy-Wxx
+    const weekMatch = dateStr.match(/^(\d{4})-W(\d{2})$/);
+    if (weekMatch) {
+      const year = parseInt(weekMatch[1], 10);
+      const week = parseInt(weekMatch[2], 10);
+      // Tính ngày đầu tuần (thứ 2)
+      const firstDayOfYear = new Date(year, 0, 1);
+      const daysOffset = ((firstDayOfYear.getDay() + 6) % 7); // chuyển chủ nhật thành 6, thứ 2 thành 0
+      const firstMonday = new Date(year, 0, 1 + (daysOffset ? 7 - daysOffset : 0));
+      const startDate = new Date(firstMonday);
+      startDate.setDate(firstMonday.getDate() + (week - 1) * 7);
+      const endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + 6);
+      const pad = (n: number) => n.toString().padStart(2, '0');
+      return `${pad(startDate.getDate())}/${pad(startDate.getMonth() + 1)} - ${pad(endDate.getDate())}/${pad(endDate.getMonth() + 1)}`;
+    }
+    // Nếu là tháng: yyyy-MM
+    const monthMatch = dateStr.match(/^(\d{4})-(\d{2})$/);
+    if (monthMatch) {
+      return `${monthMatch[2]}`;
+    }
+    // Nếu là ngày: yyyy-MM-dd
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+      const day = d.getDate().toString().padStart(2, '0');
+      const month = (d.getMonth() + 1).toString().padStart(2, '0');
+      return `${day}/${month}`;
+    }
+    return dateStr;
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -184,6 +217,7 @@ const AdminHome: React.FC = () => {
                      dataKey="date"
                      interval={getXAxisInterval(userLineData.length)}
                      height={30}
+                     tickFormatter={formatDate}
                    />
                    <YAxis allowDecimals={false} />
                    <Tooltip />
@@ -203,6 +237,7 @@ const AdminHome: React.FC = () => {
                      dataKey="date"
                      interval={getXAxisInterval(planLineData.length)}
                      height={30}
+                     tickFormatter={formatDate}
                    />
                    <YAxis allowDecimals={false} />
                    <Tooltip />
