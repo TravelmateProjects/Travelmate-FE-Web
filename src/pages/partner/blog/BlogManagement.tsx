@@ -5,6 +5,7 @@ import { useAuth } from "../../../hooks/useAuth";
 import AddBlog from "./AddBlog";
 import UpdateBlog from "./UpdateBlog";
 import ViewBlog from "./ViewBlog";
+import StatisticsModal from "./StatisticsModal";
 
 interface Blog {
   _id: string;
@@ -23,6 +24,9 @@ const BlogManagement: React.FC = () => {
 
   const [showViewModal, setShowViewModal] = useState(false);
   const [viewBlogId, setViewBlogId] = useState<string | null>(null);
+
+  const [showStatisticsModal, setShowStatisticsModal] = useState(false);
+  const [statisticsBlogId, setStatisticsBlogId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchBlogs();
@@ -58,6 +62,11 @@ const BlogManagement: React.FC = () => {
   const handleViewClick = (id: string) => {
     setViewBlogId(id);
     setShowViewModal(true);
+  };
+
+  const handleStatisticsClick = (id: string) => {
+    setStatisticsBlogId(id);
+    setShowStatisticsModal(true);
   };
 
   const truncateContent = (content: string) => {
@@ -121,8 +130,16 @@ const BlogManagement: React.FC = () => {
                   variant="danger"
                   size="sm"
                   onClick={() => handleDelete(blog._id)}
+                  className="me-2"
                 >
                   Delete
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => handleStatisticsClick(blog._id)}
+                >
+                  Statistics
                 </Button>
               </td>
             </tr>
@@ -178,6 +195,22 @@ const BlogManagement: React.FC = () => {
           {" "}
           {/* Tighter padding */}
           {viewBlogId && <ViewBlog id={viewBlogId} isModal />}
+        </Modal.Body>
+      </Modal>
+
+      {/* Statistics Modal */}
+      <Modal
+        show={showStatisticsModal}
+        onHide={() => setShowStatisticsModal(false)}
+        size="lg"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Thống kê tương tác & bình luận</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {statisticsBlogId && (
+            <StatisticsModal blogId={statisticsBlogId} />
+          )}
         </Modal.Body>
       </Modal>
     </Container>
