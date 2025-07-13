@@ -10,6 +10,9 @@ export const updateProfile = (data: { fullName: string; phone: string; address: 
   API.put('/users/updateProfile', data);
 
 export const getUserById = (userId: string) =>
-  API.get(`/users/getUserById/${userId}`); 
+  API.get(`/users/getUserById/${userId}`);
+
+export const getAllUsers = () =>
+  API.get('/users/getAllUsers'); 
 
 
