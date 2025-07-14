@@ -26,7 +26,12 @@ jobs:
           
       - name: Build application
         run: |
-          npm run build
+          # Force Vite to rebuild completely without cache
+          rm -rf node_modules/.vite
+          # Add timestamp to force changes
+          echo "// Build: $(date)" >> src/configs/api.ts
+          # Build with verbose output
+          npm run build -- --force
         env:
           NODE_OPTIONS: "--max-old-space-size=6144"
           

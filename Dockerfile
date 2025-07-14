@@ -4,6 +4,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
+# Force no cache by adding build timestamp
+RUN echo "// Build time: $(date)" >> src/configs/api.ts
 RUN npm run build
 
 # Stage 2: Serve with Nginx
