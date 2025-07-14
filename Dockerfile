@@ -4,12 +4,6 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-# Force no cache by adding build timestamp
-RUN echo "// Build time: $(date)" >> src/configs/api.ts
-# Set environment variable for build
-ENV VITE_API_BASE_URL=http://34.207.66.178:5000/
-# Clear any cached files
-RUN rm -rf node_modules/.vite || true
 RUN npm run build
 
 # Stage 2: Serve with Nginx

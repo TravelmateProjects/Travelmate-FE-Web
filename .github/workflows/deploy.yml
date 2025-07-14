@@ -1,4 +1,4 @@
-name: Build and Deploy to EC2
+name: Deploy to EC2 with NPM
 
 on:
   push:
@@ -26,81 +26,96 @@ jobs:
           
       - name: Build application
         run: |
-          # Force Vite to rebuild completely without cache
-          rm -rf node_modules/.vite
-          # Add timestamp to force changes
-          echo "// Build: $(date)" >> src/configs/api.ts
-          # Check for old IP addresses and replace them
-          find src -type f -name "*.ts" -o -name "*.tsx" -o -name "*.js" | xargs grep -l "3.93.248.130" || echo "No old IP found"
-          # Build without cache
+          # Force clean build
+          rm -rf dist node_modules/.vite
+          # Update API URL directly in api.ts
+          sed -i 's|export const API_BASE_URL = ".*"|export const API_BASE_URL = "http://13.221.195.132:5000/"|' src/configs/api.ts
+          # Add timestamp to force rebuild
+          echo "// Updated on $(date)" >> src/configs/api.ts
+          # Build project
           npm run build
         env:
-          NODE_OPTIONS: "--max-old-space-size=6144"
-          VITE_API_BASE_URL: "http://34.207.66.178:5000/"
+          NODE_OPTIONS: "--max-old-space-size=4096"
           
-      - name: Deploy to EC2
+      - name: Deploy to EC2 without Docker
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          timeout: 20m
           script: |
-            echo "🔄 Preparing deployment directory..."
-            mkdir -p /mnt/data/Travelmate/deployment-temp
+            # Create deployment directory if not exists
+            mkdir -p /mnt/data/Travelmate/Travelmate-FE-Web-App
             
-      - name: Copy dist directory to server
+            # Stop any running PM2 process
+            pm2 stop travelmate-fe-web || echo "No process to stop"
+            pm2 delete travelmate-fe-web || echo "No process to delete"
+            
+      - name: Copy built files to server
         uses: appleboy/scp-action@v0.1.4
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           source: "dist/"
-          target: "/mnt/data/Travelmate/deployment-temp"
+          target: "/mnt/data/Travelmate/Travelmate-FE-Web-App"
           overwrite: true
           
-      - name: Deploy the built application
+      - name: Setup and start application
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          timeout: 20m
           script: |
-            cd /mnt/data/Travelmate/Travelmate-FE-Web
+            cd /mnt/data/Travelmate/Travelmate-FE-Web-App
             
-            # Pull latest code for other files
-            echo "🔄 Pulling latest code..."
-            git pull origin master
+            # Install PM2 globally if not already installed
+            which pm2 || npm install -g pm2
             
-            # Stop old containers
-            echo "🧹 Stopping old containers..."
-            docker-compose down
+            # Create simple Express server to serve static files
+            cat > server.js << 'EOF'
+            const express = require('express');
+            const path = require('path');
+            const app = express();
             
-            # Update the deployment
-            echo "🔧 Updating deployment..."
-            # Make backup of current dist if it exists
-            if [ -d "dist" ]; then
-              rm -rf dist.bak
-              mv dist dist.bak
+            // Serve static files
+            app.use(express.static(path.join(__dirname, 'dist')));
+            
+            // Handle routes for SPA
+            app.get('*', (req, res) => {
+              res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+            });
+            
+            const PORT = process.env.PORT || 3000;
+            app.listen(PORT, () => {
+              console.log(`Server running on port ${PORT}`);
+            });
+            EOF
+            
+            # Create package.json if it doesn't exist
+            if [ ! -f package.json ]; then
+              cat > package.json << 'EOF'
+            {
+              "name": "travelmate-fe-web-server",
+              "version": "1.0.0",
+              "description": "Simple server for Travelmate FE Web",
+              "main": "server.js",
+              "dependencies": {
+                "express": "^4.18.2"
+              },
+              "scripts": {
+                "start": "node server.js"
+              }
+            }
+            EOF
             fi
             
-            # Replace with new pre-built dist
-            cp -r /mnt/data/Travelmate/deployment-temp/dist .
+            # Install dependencies
+            npm install
             
-            # Update environment variables in docker-compose
-            echo "🔧 Updating environment variables..."
-            echo "VITE_API_BASE_URL=http://34.207.66.178:5000/" > .env
-            
-            # Ensure Docker will use pre-built files without rebuilding
-            echo "🚀 Starting container with pre-built files..."
-            # Force rebuild with no cache
-            docker-compose up -d --build --force-recreate
-            
-            # Clean up
-            echo "🧼 Cleaning up..."
-            rm -rf /mnt/data/Travelmate/deployment-temp
-            docker image prune -f
+            # Start server with PM2
+            pm2 start server.js --name travelmate-fe-web
 
       - name: Get current time
         id: get_time
@@ -114,14 +129,14 @@ jobs:
           server_port: ${{ secrets.MAIL_PORT }}
           username: ${{ secrets.MAIL_USERNAME }}
           password: ${{ secrets.MAIL_PASSWORD }}
-          
-          subject: 🥳 Travelmate FE-Web Deployment Successful At ${{ steps.get_time.outputs.time }}
+          subject: 🥳 Travelmate FE-Web Deployment Successful At ${{ steps.get_time.outputs.time }} 
           to: ${{ secrets.RECEIVER_EMAIL }}
           from: ${{ secrets.MAIL_USERNAME }}
           body: |
-            🎉 Travelmate FE-Web has been successfully deployed to EC2!
+            🎉 Travelmate fe-web has been successfully deployed to EC2!
 
             ➤ Git Branch: master  
-            ➤ Docker Compose: Build & Up successful  
+            ➤ Deployment: PM2 + Express Server
             ➤ Time: ${{ github.event.head_commit.timestamp }}
             ➤ Access: http://${{ secrets.EC2_HOST }}:3000
+            
