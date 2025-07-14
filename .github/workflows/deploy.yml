@@ -1,121 +1,39 @@
-name: Deploy to EC2 with NPM
+name: Deploy to EC2
 
 on:
   push:
     branches:
       - master
+  # pull_request:
+  #   branches:
+  #     - master
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: SSH and deploy FE-Web on EC2 with Docker Compose
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /mnt/data/Travelmate/Travelmate-FE-Web
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          
-      - name: Install dependencies
-        run: |
-          npm ci
-          
-      - name: Build application
-        run: |
-          # Force clean build
-          rm -rf dist node_modules/.vite
-          # Update API URL directly in api.ts
-          sed -i 's|export const API_BASE_URL = ".*"|export const API_BASE_URL = "http://13.221.195.132:5000/"|' src/configs/api.ts
-          # Add timestamp to force rebuild
-          echo "// Updated on $(date)" >> src/configs/api.ts
-          # Build project
-          npm run build
-        env:
-          NODE_OPTIONS: "--max-old-space-size=4096"
-          
-      - name: Deploy to EC2 without Docker
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            # Create deployment directory if not exists
-            mkdir -p /mnt/data/Travelmate/Travelmate-FE-Web-App
-            
-            # Stop any running PM2 process
-            pm2 stop travelmate-fe-web || echo "No process to stop"
-            pm2 delete travelmate-fe-web || echo "No process to delete"
-            
-      - name: Copy built files to server
-        uses: appleboy/scp-action@v0.1.4
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          source: "dist/"
-          target: "/mnt/data/Travelmate/Travelmate-FE-Web-App"
-          overwrite: true
-          
-      - name: Setup and start application
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            cd /mnt/data/Travelmate/Travelmate-FE-Web-App
-            
-            # Install PM2 globally if not already installed
-            which pm2 || npm install -g pm2
-            
-            # Create simple Express server to serve static files
-            cat > server.js << 'EOF'
-            const express = require('express');
-            const path = require('path');
-            const app = express();
-            
-            // Serve static files
-            app.use(express.static(path.join(__dirname, 'dist')));
-            
-            // Handle routes for SPA
-            app.get('*', (req, res) => {
-              res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-            });
-            
-            const PORT = process.env.PORT || 3000;
-            app.listen(PORT, () => {
-              console.log(`Server running on port ${PORT}`);
-            });
-            EOF
-            
-            # Create package.json if it doesn't exist
-            if [ ! -f package.json ]; then
-              cat > package.json << 'EOF'
-            {
-              "name": "travelmate-fe-web-server",
-              "version": "1.0.0",
-              "description": "Simple server for Travelmate FE Web",
-              "main": "server.js",
-              "dependencies": {
-                "express": "^4.18.2"
-              },
-              "scripts": {
-                "start": "node server.js"
-              }
-            }
-            EOF
-            fi
-            
-            # Install dependencies
-            npm install
-            
-            # Start server with PM2
-            pm2 start server.js --name travelmate-fe-web
+            # Pull latest code
+            git pull origin master
+
+            # Stop and remove old containers
+            docker-compose down
+
+            # Rebuild and run new containers
+            docker-compose up --build -d
+
+            # Clean up unused images (old versions)
+            docker image prune -f
 
       - name: Get current time
         id: get_time
@@ -136,7 +54,7 @@ jobs:
             🎉 Travelmate fe-web has been successfully deployed to EC2!
 
             ➤ Git Branch: master  
-            ➤ Deployment: PM2 + Express Server
+            ➤ Docker Compose: Build & Up successful  
             ➤ Time: ${{ github.event.head_commit.timestamp }}
             ➤ Access: http://${{ secrets.EC2_HOST }}:3000
             
