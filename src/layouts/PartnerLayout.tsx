@@ -1,20 +1,24 @@
 import React from 'react';
-import { Container, Row, Col } from 'react-bootstrap';
 import { Outlet } from 'react-router-dom';
 import PartnerSidebar from '../components/partner/PartnerSidebar';
 
 const PartnerLayout: React.FC = () => {
+  const SIDEBAR_WIDTH = 240;
+
   return (
-    <Container fluid>
-      <Row>
-        <Col md={3} className="min-vh-100 p-0">
-          <PartnerSidebar />
-        </Col>
-        <Col md={9} className="p-4">
-          <Outlet />
-        </Col>
-      </Row>
-    </Container>
+    <div style={{ display: 'flex', minHeight: '100vh', width: '100vw', overflowX: 'hidden' }}>
+      <PartnerSidebar />
+      <div
+        style={{
+          marginLeft: SIDEBAR_WIDTH,
+          padding: '24px',
+          width: `calc(100% - ${SIDEBAR_WIDTH}px)`,
+          backgroundColor: '#f5f5f5', // màu nền giống Facebook
+        }}
+      >
+        <Outlet />
+      </div>
+    </div>
   );
 };
 

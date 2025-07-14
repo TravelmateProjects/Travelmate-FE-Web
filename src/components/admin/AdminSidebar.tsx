@@ -3,8 +3,17 @@ import { Nav, Button, Stack, Card } from 'react-bootstrap';
 import { useAuth } from '../../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useLanguage } from '../../hooks/useLanguage'
+import { useLanguage } from '../../hooks/useLanguage';
 import authService from '../../services/authService';
+import {
+  FiBarChart2,
+  FiUsers,
+  FiUserPlus,
+  FiSettings,
+  FiLogOut,
+  FiChevronLeft,
+  FiChevronRight,
+} from 'react-icons/fi';
 
 const SIDEBAR_WIDTH = 240;
 const SIDEBAR_COLLAPSED_WIDTH = 64;
@@ -14,17 +23,15 @@ const AdminSidebar: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { language, setLanguage } = useLanguage();
-  const [collapsed, setCollapsed] = useState(false);const handleLogout = async () => {
+  const [collapsed, setCollapsed] = useState(false);
+
+  const handleLogout = async () => {
     try {
-      // Call logout API to remove httpOnly cookies on the server
       await authService.logout();
       console.log('[AdminSidebar] Logout API called successfully');
     } catch (error) {
       console.error('[AdminSidebar] Logout API failed:', error);
-      // Still proceed to logout even if the API fails
     }
-    
-    // Clear local state
     dispatch({ type: 'LOGOUT' });
     localStorage.removeItem('auth');
     navigate('/login');
@@ -37,8 +44,8 @@ const AdminSidebar: React.FC = () => {
         border: 'none',
         borderRadius: 0,
         background: collapsed
-          ? '#212529'
-          : 'linear-gradient(180deg, #212529 0%, #495057 100%)',
+          ? '#343a40'
+          : 'linear-gradient(180deg, #343a40 0%, #6c757d 100%)',
         color: '#fff',
         width: collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_WIDTH,
         transition: 'width 0.2s, background 0.2s',
@@ -51,51 +58,68 @@ const AdminSidebar: React.FC = () => {
       }}
     >
       <Card.Body className="d-flex flex-column p-0" style={{ height: '100%' }}>
-        <div className="d-flex align-items-center justify-content-between p-3 border-bottom border-white-50 mb-3" style={{ minHeight: 72 }}>
+        {/* Header */}
+        <div className="d-flex align-items-center justify-content-between p-3 border-bottom border-white-25">
           {!collapsed && (
             <div>
-              <div style={{ fontWeight: 600, fontSize: 18, marginBottom: 4 }}>👋 {t('welcome')}</div>
-              <div style={{ fontWeight: 700, fontSize: 20, letterSpacing: 1 }}>{state.account?.username || 'Admin'}</div>
+              <div style={{ fontWeight: 600, fontSize: 16 }}>👋 {t('welcome')}</div>
+              <div style={{ fontWeight: 700, fontSize: 18 }}>
+                {state.account?.username || 'Admin'}
+              </div>
             </div>
           )}
           <Button
             variant="outline-light"
             size="sm"
-            style={{ border: 'none', boxShadow: 'none', minWidth: 32, minHeight: 32, padding: 0 }}
-            onClick={() => setCollapsed((c) => !c)}
-            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            className="d-flex align-items-center justify-content-center"
+            style={{ border: 'none', boxShadow: 'none', width: 32, height: 32 }}
+            onClick={() => setCollapsed(!collapsed)}
           >
-            {collapsed ? <span style={{ fontSize: 20 }}>»</span> : <span style={{ fontSize: 20 }}>«</span>}
+            {collapsed ? <FiChevronRight size={20} /> : <FiChevronLeft size={20} />}
           </Button>
         </div>
-        <Stack gap={2} className="px-2 flex-grow-1 align-items-center" style={{ minHeight: 0 }}>
+
+        {/* Navigation */}
+        <Stack className="px-2 py-3" gap={2}>
           <Nav.Link
-            href="/admin/home"
-            className="text-white rounded-3 py-2 px-2 w-100 d-flex align-items-center justify-content-start"
-            style={{ background: 'rgba(255,255,255,0.10)', fontWeight: 500 }}
+            onClick={() => navigate('/admin/home')}
+            className="text-white rounded-3 py-2 px-2 w-100 d-flex align-items-center"
+            style={{ background: 'rgba(255,255,255,0.1)', fontWeight: 500 }}
           >
-            <span role="img" aria-label="dashboard" style={{ fontSize: 20, marginRight: collapsed ? 0 : 8 }}>📊</span>
-            {!collapsed && t('admin_home')}
+            <FiBarChart2 size={18} />
+            {!collapsed && <span className="ms-2">{t('admin_home')}</span>}
           </Nav.Link>
+
           <Nav.Link
-            href="/admin/users"
-            className="text-white rounded-3 py-2 px-2 w-100 d-flex align-items-center justify-content-start"
-            style={{ background: 'rgba(255,255,255,0.10)', fontWeight: 500 }}
+            onClick={() => navigate('/admin/users')}
+            className="text-white rounded-3 py-2 px-2 w-100 d-flex align-items-center"
+            style={{ background: 'rgba(255,255,255,0.1)', fontWeight: 500 }}
           >
-            <span role="img" aria-label="users" style={{ fontSize: 20, marginRight: collapsed ? 0 : 8 }}>👥</span>
-            {!collapsed && t('manage_users')}
+            <FiUsers size={18} />
+            {!collapsed && <span className="ms-2">{t('manage_users')}</span>}
           </Nav.Link>
+
           <Nav.Link
-            href="/admin/settings"
-            className="text-white rounded-3 py-2 px-2 w-100 d-flex align-items-center justify-content-start"
-            style={{ background: 'rgba(255,255,255,0.10)', fontWeight: 500 }}
+            onClick={() => navigate('/admin/create-partner')}
+            className="text-white rounded-3 py-2 px-2 w-100 d-flex align-items-center"
+            style={{ background: 'rgba(255,255,255,0.1)', fontWeight: 500 }}
           >
-            <span role="img" aria-label="settings" style={{ fontSize: 20, marginRight: collapsed ? 0 : 8 }}>⚙️</span>
-            {!collapsed && t('settings')}
+            <FiUserPlus size={18} />
+            {!collapsed && <span className="ms-2">{t('create_partner')}</span>}
           </Nav.Link>
-          {/* Add more admin-specific links here */}
+
+          <Nav.Link
+            onClick={() => navigate('/admin/settings')}
+            className="text-white rounded-3 py-2 px-2 w-100 d-flex align-items-center"
+            style={{ background: 'rgba(255,255,255,0.1)', fontWeight: 500 }}
+          >
+            <FiSettings size={18} />
+            {!collapsed && <span className="ms-2">{t('settings')}</span>}
+          </Nav.Link>
         </Stack>
-        { !collapsed && (
+
+        {/* Language Switch */}
+        {!collapsed && (
           <div className="px-3 pb-2 d-flex align-items-center justify-content-between">
             <div style={{ fontSize: 13, color: '#ccc', marginBottom: 4 }}>
               {t('language')}:
@@ -105,28 +129,43 @@ const AdminSidebar: React.FC = () => {
                 <input
                   className="form-check-input"
                   type="checkbox"
-                  id="langSwitch"
+                  id="langSwitchAdmin"
                   checked={language === 'en'}
                   onChange={() => setLanguage(language === 'vi' ? 'en' : 'vi')}
                   style={{ cursor: 'pointer' }}
                 />
-                <label className="form-check-label" htmlFor="langSwitch" style={{ fontSize: 13, marginLeft: 8 }}>
+                <label
+                  className="form-check-label"
+                  htmlFor="langSwitchAdmin"
+                  style={{ fontSize: 13, marginLeft: 8 }}
+                >
                   {language === 'vi' ? 'VI' : 'EN'}
                 </label>
               </div>
             </div>
           </div>
         )}
+
+        {/* Logout */}
         <div className="mt-auto p-3 d-flex justify-content-center">
           <Button
-            variant="light"
-            size="sm"
-            className="w-100 fw-bold"
             onClick={handleLogout}
-            style={{ fontSize: 14, padding: collapsed ? '0.5rem' : undefined }}
+            className="w-100 d-flex align-items-center justify-content-center fw-bold"
+            style={{
+              background: '#fff',
+              color: '#343a40',
+              border: 'none',
+              borderRadius: 8,
+              padding: collapsed ? '8px' : '8px 16px',
+              fontSize: 14,
+              transition: 'all 0.2s ease-in-out',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = '#dee2e6')}
+            onMouseLeave={(e) => (e.currentTarget.style.background = '#fff')}
             title={t('logout')}
           >
-            {collapsed ? <span role="img" aria-label="logout">🚪</span> : t('logout')}
+            <FiLogOut size={18} style={{ marginRight: collapsed ? 0 : 8 }} />
+            {!collapsed && t('logout')}
           </Button>
         </div>
       </Card.Body>

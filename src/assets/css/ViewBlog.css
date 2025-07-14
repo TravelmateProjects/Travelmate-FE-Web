@@ -1,0 +1,11 @@
+.yarl__captions_description {
+  position: absolute !important;
+  top: 10px !important;
+  right: 20px !important;
+  color: white !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+  padding: 4px 8px !important;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 14px;
+}
