@@ -51,7 +51,7 @@ jobs:
             # Force kill any remaining containers if needed
             docker ps | grep travelmate-fe-web | awk '{print $1}' | xargs -r docker kill || true
 
-      - name: SSH - Build and start containers (with resource limits)
+      - name: SSH - Build and start containers (simplified approach)
         uses: appleboy/ssh-action@v1.0.0
         id: ssh_build
         continue-on-error: true
@@ -64,42 +64,61 @@ jobs:
           script: |
             cd /mnt/data/Travelmate/Travelmate-FE-Web || exit 1
             
-            # Safeguard: Stop any previous stuck builds
+            echo "::group::Cleanup"
+            # Stop any previous containers
             docker ps -a | grep travelmate-fe-web | awk '{print $1}' | xargs -r docker rm -f || true
+            echo "::endgroup::"
             
-            # Set environment variables to prevent hanging
+            echo "::group::Prepare environment"
+            # Set environment variables for Docker and Node.js
             export DOCKER_CLIENT_TIMEOUT=600
             export COMPOSE_HTTP_TIMEOUT=600
             export NODE_OPTIONS="--max-old-space-size=2048"
             
-            # Create/update a modified docker-compose override file with resource limits
-            cat > docker-compose.override.yml <<EOL
-            version: '3'
-            services:
-              travelmate-fe-web:
-                deploy:
-                  resources:
-                    limits:
-                      cpus: '1.5'
-                      memory: 2G
-                    reservations:
-                      cpus: '0.5'
-                      memory: 1G
-                environment:
-                  - NODE_OPTIONS=--max-old-space-size=2048
+            # We'll use direct Docker commands instead of docker-compose override
+            # because of potential YAML formatting issues
+            echo "::endgroup::"
+            
+            echo "::group::Check for existing image"
+            # Check if we can reuse an existing image first
+            if docker images | grep -q travelmate-fe-web; then
+              echo "Found existing image, trying to start it first..."
+              docker run -d --name travelmate-fe-web-temp --restart=always \
+                --memory=1g --cpus=1.0 -p 3000:3000 \
+                -e NODE_OPTIONS="--max-old-space-size=2048" \
+                travelmate-fe-web:latest || true
+            fi
+            echo "::endgroup::"
+            
+            echo "::group::Start background build"
+            # Create a simple build script that will execute in background
+            cat > /tmp/build_travelmate.sh <<'EOL'
+            #!/bin/bash
+            cd /mnt/data/Travelmate/Travelmate-FE-Web
+            
+            # Build with memory limits
+            docker build --memory=2g --memory-swap=2g \
+              --build-arg NODE_OPTIONS="--max-old-space-size=2048" \
+              -t travelmate-fe-web:latest .
+            
+            # Stop any container that might be running from earlier steps
+            docker ps -a | grep travelmate-fe-web | awk '{print $1}' | xargs -r docker rm -f || true
+            
+            # Run the new container with resource limits
+            docker run -d --name travelmate-fe-web --restart=always \
+              --memory=1g --cpus=1.0 -p 3000:3000 \
+              -e NODE_OPTIONS="--max-old-space-size=2048" \
+              travelmate-fe-web:latest
+            
+            echo "$(date): Build completed" >> /tmp/travelmate_build.log
             EOL
             
-            # Start without build first to avoid long-running build process
-            if docker images | grep -q travelmate-fe-web; then
-              echo "Using existing image first to maintain service..."
-              docker-compose up -d --no-build || true
-            fi
+            chmod +x /tmp/build_travelmate.sh
+            nohup /tmp/build_travelmate.sh > /tmp/travelmate_build.log 2>&1 &
+            echo "Build process started in background with PID: $!"
+            echo "::endgroup::"
             
-            # Then rebuild in background with nohup to prevent SSH timeout
-            echo "Starting build process in background..."
-            nohup sh -c "cd /mnt/data/Travelmate/Travelmate-FE-Web && docker-compose build --no-cache && docker-compose up -d" > /tmp/travelmate_build.log 2>&1 &
-            BUILD_PID=$!
-            
+            echo "::group::Wait for container"
             # Wait for container to be running (max 2 minutes)
             echo "Waiting for container to become available..."
             COUNTER=0
@@ -116,8 +135,20 @@ jobs:
             echo "❌ Container not detected as running within timeout period"
             echo "Current docker processes:"
             docker ps -a
-            echo "Last 20 lines of build log:"
-            tail -n 20 /tmp/travelmate_build.log
+            echo "Recent docker build logs:"
+            tail -n 30 /tmp/travelmate_build.log
+            
+            # Check for error patterns in the log
+            if grep -q "Error" /tmp/travelmate_build.log; then
+              echo "ERROR DETECTED in build logs:"
+              grep -A 5 -B 5 "Error" /tmp/travelmate_build.log
+            fi
+            
+            # Check system resources
+            echo "System resources:"
+            free -m
+            df -h
+            echo "::endgroup::"
             exit 1
             
       - name: SSH - Clean up
@@ -157,60 +188,93 @@ jobs:
             cd /mnt/data/Travelmate/Travelmate-FE-Web || exit 1
             
             echo "::group::Emergency Cleanup"
-            # Check system resources
-            echo "System resources:"
+            # Check system resources first
+            echo "System resources before cleanup:"
             free -h
             df -h
+            docker ps -a
             
-            # Kill any stuck processes
-            echo "Killing any processes that may be using resources:"
-            ps aux | grep -i docker | grep -v grep || true
-            docker ps -a | grep travelmate-fe-web | awk '{print $1}' | xargs -r docker rm -f || true
+            # Force kill any Docker processes that might be causing issues
+            echo "Force stopping all related containers"
+            docker ps -a | grep -i travelmate | awk '{print $1}' | xargs -r docker stop || true
+            docker ps -a | grep -i travelmate | awk '{print $1}' | xargs -r docker rm -f || true
             
-            # Cleanup Docker completely if needed
-            echo "Cleaning up Docker resources:"
-            docker system prune -f || true
-            docker volume prune -f || true
+            # Clean up Docker system
+            echo "Pruning Docker system"
+            docker system prune -f
+            docker volume prune -f
+            
+            # Check if we have enough disk space
+            echo "System resources after cleanup:"
+            free -h
+            df -h
             echo "::endgroup::"
             
-            echo "::group::Emergency Deployment"
-            # Create a simplified emergency Dockerfile if necessary
-            cat > Dockerfile.emergency <<EOL
-            FROM node:20-alpine as builder
-            WORKDIR /app
-            COPY package*.json ./
-            RUN npm ci --only=production
-            COPY . .
-            RUN npm run build
+            echo "::group::Minimal Emergency Deploy"
+            # Create an extremely minimal container using Nginx only 
+            # This will at least give us a "site under maintenance" message
             
-            FROM nginx:alpine
-            COPY --from=builder /app/dist /usr/share/nginx/html
-            COPY nginx.conf /etc/nginx/conf.d/default.conf
-            EXPOSE 3000
-            CMD ["nginx", "-g", "daemon off;"]
+            # Create a maintenance page
+            mkdir -p /tmp/maintenance-site
+            cat > /tmp/maintenance-site/index.html <<'EOL'
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Travelmate - Under Maintenance</title>
+                <style>
+                    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; }
+                    h1 { color: #3498db; }
+                    .message { margin: 30px 0; color: #555; }
+                </style>
+            </head>
+            <body>
+                <h1>Travelmate</h1>
+                <div class="message">
+                    <h2>Site Under Maintenance</h2>
+                    <p>We're currently updating our services. Please check back shortly.</p>
+                    <p>Last update: $(date)</p>
+                </div>
+            </body>
+            </html>
             EOL
             
-            # Try to build and run emergency container with resource limits
-            echo "Building emergency container:"
-            docker build -t travelmate-fe-web:emergency -f Dockerfile.emergency . --memory=2g --memory-swap=2g || true
+            # Run a simple nginx container with the maintenance page
+            echo "Starting emergency maintenance container"
+            docker run -d --name travelmate-fe-web-maintenance \
+              --restart=always --memory=256m --cpus=0.5 \
+              -p 3000:80 -v /tmp/maintenance-site:/usr/share/nginx/html \
+              nginx:alpine
             
-            echo "Running emergency container:"
-            docker run -d --restart=always --name travelmate-fe-web-emergency -p 3000:3000 --memory=1g --cpus=1.0 travelmate-fe-web:emergency
-            echo "::endgroup::"
-            
-            # Verify deployment success
-            echo "Verifying deployment:"
-            sleep 15
-            if docker ps | grep -q "travelmate-fe-web"; then
-              echo "✅ Emergency deployment verified successful!"
+            # Check if maintenance site is running
+            if docker ps | grep -q "travelmate-fe-web-maintenance"; then
+              echo "✅ Emergency maintenance site is running!"
+              echo "::endgroup::"
+              
+              echo "::group::Attempt Background Full Build"
+              # Try a full rebuild in the background (won't block the workflow)
+              nohup sh -c "cd /mnt/data/Travelmate/Travelmate-FE-Web && \
+                docker build --memory=2g --memory-swap=2g --no-cache -t travelmate-fe-web:latest . && \
+                docker stop travelmate-fe-web-maintenance && \
+                docker run -d --name travelmate-fe-web --restart=always --memory=1g \
+                  --cpus=1.0 -p 3000:3000 travelmate-fe-web:latest" > /tmp/emergency_build.log 2>&1 &
+              
+              echo "Background build started with PID: $!"
+              echo "::endgroup::"
               exit 0
             else
-              echo "❌ Container not running after emergency deployment"
-              # Last resort - Try to use a pre-built image if available
-              if docker images | grep -q "travelmate-fe-web"; then
-                echo "Attempting last resort with existing image..."
-                docker run -d --restart=always --name travelmate-fe-web-last-resort -p 3000:3000 travelmate-fe-web:latest
-              fi
+              echo "❌ Even emergency maintenance container failed to start"
+              echo "::endgroup::"
+              
+              echo "::group::System Diagnostics"
+              echo "Docker info:"
+              docker info
+              echo "Running processes:"
+              ps aux | sort -nrk 3,3 | head -n 15
+              echo "Disk usage:"
+              df -h
+              echo "Memory usage:"
+              free -m
+              echo "::endgroup::"
               exit 1
             fi
 
