@@ -17,8 +17,8 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          timeout: 30m              # 30 phút
-          command_timeout: 20m     # 20 phút
+          timeout: 60m              # 60 phút
+          command_timeout: 40m     # 40 phút
           script: |
             cd /mnt/data/Travelmate/Travelmate-FE-Web
 
@@ -30,12 +30,18 @@ jobs:
             echo "🧹 Stopping old containers..."
             docker-compose down
 
-            # Rebuild and run new containers
+            # Tối ưu build trong package.json
+            echo "🔧 Updating build configuration..."
+            # Bỏ cờ debug trong package.json nếu có
+            sed -i 's/"build": "tsc -b && vite build --debug"/"build": "tsc -b && vite build"/g' package.json
+            
+            # Rebuild and run new containers with optimized settings
             echo "🚀 Building and starting containers..."
             (while true; do echo "⏳ Still building..."; sleep 30; done) & keepalive=$!
-            docker-compose up --build -d
-
-            # Rebuild and run new containers
+            # Sử dụng NODE_OPTIONS để tăng memory limit
+            export NODE_OPTIONS="--max-old-space-size=4096" && docker-compose up --build -d
+            
+            # Stop the keepalive process
             kill $keepalive
 
             # Clean up unused images (old versions)
