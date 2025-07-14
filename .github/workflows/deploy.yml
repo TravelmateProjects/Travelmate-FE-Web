@@ -1,4 +1,4 @@
-name: Deploy to EC2
+name: Build and Deploy to EC2
 
 on:
   push:
@@ -7,45 +7,87 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: SSH and deploy FE-Web on EC2 with Docker Compose
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: |
+          npm ci
+          
+      - name: Build application
+        run: |
+          npm run build
+        env:
+          NODE_OPTIONS: "--max-old-space-size=6144"
+          
+      - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          timeout: 60m              # 60 phút
-          command_timeout: 40m     # 40 phút
+          timeout: 20m
+          script: |
+            echo "🔄 Preparing deployment directory..."
+            mkdir -p /mnt/data/Travelmate/deployment-temp
+            
+      - name: Copy dist directory to server
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "dist/"
+          target: "/mnt/data/Travelmate/deployment-temp"
+          overwrite: true
+          
+      - name: Deploy the built application
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          timeout: 20m
           script: |
             cd /mnt/data/Travelmate/Travelmate-FE-Web
-
-            # Pull latest code
+            
+            # Pull latest code for other files
             echo "🔄 Pulling latest code..."
             git pull origin master
-
-            # Stop and remove old containers
+            
+            # Stop old containers
             echo "🧹 Stopping old containers..."
             docker-compose down
-
-            # Tối ưu build trong package.json
-            echo "🔧 Updating build configuration..."
-            # Bỏ cờ debug trong package.json nếu có
-            sed -i 's/"build": "tsc -b && vite build --debug"/"build": "tsc -b && vite build"/g' package.json
             
-            # Rebuild and run new containers with optimized settings
-            echo "🚀 Building and starting containers..."
-            (while true; do echo "⏳ Still building..."; sleep 30; done) & keepalive=$!
-            # Sử dụng NODE_OPTIONS để tăng memory limit
-            export NODE_OPTIONS="--max-old-space-size=4096" && docker-compose up --build -d
+            # Update the deployment
+            echo "🔧 Updating deployment..."
+            # Make backup of current dist if it exists
+            if [ -d "dist" ]; then
+              rm -rf dist.bak
+              mv dist dist.bak
+            fi
             
-            # Stop the keepalive process
-            kill $keepalive
-
-            # Clean up unused images (old versions)
-            echo "🧼 Cleaning up old Docker images..."
+            # Replace with new pre-built dist
+            cp -r /mnt/data/Travelmate/deployment-temp/dist .
+            
+            # Ensure Docker will use pre-built files without rebuilding
+            # Update Dockerfile if needed to skip build
+            echo "🚀 Starting container with pre-built files..."
+            docker-compose up -d
+            
+            # Clean up
+            echo "🧼 Cleaning up..."
+            rm -rf /mnt/data/Travelmate/deployment-temp
             docker image prune -f
 
       - name: Get current time
