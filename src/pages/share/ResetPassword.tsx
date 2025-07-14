@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Form, Button, Alert, Spinner, Card, Container, Row, Col } from 'react-bootstrap';
+import { Form, Button, Spinner, Card, Container, Row, Col } from 'react-bootstrap';
 import authService from '../../services/authService';
 import bgImage from '../../images/background.jpg';
 import ModernAlert from '../../components/ModernAlert';
