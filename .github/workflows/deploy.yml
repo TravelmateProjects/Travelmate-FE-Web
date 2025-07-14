@@ -12,35 +12,155 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 20  # Reduced timeout for faster feedback
 
     steps:
-      - name: SSH and deploy FE-Web on EC2 with Docker Compose
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      
+      # Breaking the deployment into smaller steps to avoid timeouts
+      - name: SSH - Pull latest code
         uses: appleboy/ssh-action@v1.0.0
+        id: ssh_pull
+        continue-on-error: true
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          command_timeout: 5m
+          script_stop: true
           script: |
-            cd /mnt/data/Travelmate/Travelmate-FE-Web
-
-            # Pull latest code
+            cd /mnt/data/Travelmate/Travelmate-FE-Web || exit 1
             git pull origin master
 
-            # Stop and remove old containers
-            docker-compose down
+      - name: SSH - Stop old containers
+        uses: appleboy/ssh-action@v1.0.0
+        id: ssh_stop
+        continue-on-error: true
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          command_timeout: 5m
+          script_stop: false  # Don't stop if failure occurs, keep trying
+          script: |
+            cd /mnt/data/Travelmate/Travelmate-FE-Web || exit 1
+            docker-compose down --timeout 60 || true
+            # Force kill any remaining containers if needed
+            docker ps | grep travelmate-fe-web | awk '{print $1}' | xargs -r docker kill || true
 
-            # Rebuild and run new containers
-            docker-compose up --build -d
-
-            # Clean up unused images (old versions)
+      - name: SSH - Build and start containers
+        uses: appleboy/ssh-action@v1.0.0
+        id: ssh_build
+        continue-on-error: true
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          command_timeout: 15m
+          script_stop: true
+          script: |
+            cd /mnt/data/Travelmate/Travelmate-FE-Web || exit 1
+            # Set limited build time to prevent hanging
+            export DOCKER_CLIENT_TIMEOUT=600
+            export COMPOSE_HTTP_TIMEOUT=600
+            docker-compose up --build -d --timeout 600
+            
+            # Verify deployment success
+            sleep 30
+            if docker ps | grep -q "travelmate-fe-web"; then
+              echo "✅ Deployment verified successful!"
+              exit 0
+            else
+              echo "❌ Container not running after deployment"
+              exit 1
+            fi
+            
+      - name: SSH - Clean up
+        uses: appleboy/ssh-action@v1.0.0
+        id: ssh_cleanup
+        continue-on-error: true
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          command_timeout: 2m
+          script: |
+            cd /mnt/data/Travelmate/Travelmate-FE-Web || exit 1
             docker image prune -f
+
+      - name: Check deployment status
+        id: check_deployment
+        if: always()
+        run: |
+          if [[ "${{ steps.ssh_build.outcome }}" == "success" ]]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Retry deployment if first attempt failed
+        if: steps.check_deployment.outputs.status == 'failure'
+        uses: appleboy/ssh-action@v1.0.0
+        id: retry_deploy
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          command_timeout: 15m
+          script_stop: true
+          script: |
+            cd /mnt/data/Travelmate/Travelmate-FE-Web || exit 1
+            
+            echo "::group::Retry: Force cleanup"
+            # Forcefully remove any stuck containers
+            docker-compose down --timeout 30 || true
+            docker ps | grep travelmate-fe-web | awk '{print $1}' | xargs -r docker rm -f || true
+            echo "::endgroup::"
+            
+            echo "::group::Retry: Building with minimal options"
+            # Use minimal build with timeouts
+            export DOCKER_CLIENT_TIMEOUT=600
+            export COMPOSE_HTTP_TIMEOUT=600
+            # Try running with reduced complexity
+            docker-compose up -d --no-build || docker-compose up -d --build
+            echo "::endgroup::"
+            
+            # Verify deployment success
+            sleep 30
+            if docker ps | grep -q "travelmate-fe-web"; then
+              echo "✅ Retry deployment verified successful!"
+              exit 0
+            else
+              echo "❌ Container not running after retry deployment"
+              # Try one more emergency attempt with docker run directly if possible
+              echo "Attempting emergency direct container start..."
+              cd /mnt/data/Travelmate/Travelmate-FE-Web
+              if [ -f ./Dockerfile ]; then
+                docker build -t travelmate-fe-web:emergency .
+                docker run -d --name travelmate-fe-web-emergency -p 3000:3000 travelmate-fe-web:emergency
+              fi
+              exit 1
+            fi
 
       - name: Get current time
         id: get_time
         run: echo "time=$(date '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_OUTPUT
-
+            
+      - name: Check overall deployment status
+        id: check_status
+        if: always()
+        run: |
+          if [[ "${{ steps.ssh_build.outcome }}" == "success" || "${{ steps.retry_deploy.outcome }}" == "success" ]]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+          fi
+          
       - name: Send email notification on success
-        if: success()
+        if: steps.check_status.outputs.status == 'success'
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: ${{ secrets.MAIL_SERVER }}
@@ -57,4 +177,134 @@ jobs:
             ➤ Docker Compose: Build & Up successful  
             ➤ Time: ${{ github.event.head_commit.timestamp }}
             ➤ Access: http://${{ secrets.EC2_HOST }}:3000
+          
+      - name: Collect deployment debug information
+        if: steps.check_status.outputs.status == 'failure'
+        id: debug_info
+        continue-on-error: true
+        run: |
+          echo "timestamp=$(date '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_OUTPUT
+          echo "runner=$(uname -a)" >> $GITHUB_OUTPUT
+
+      - name: Send email notification on failure
+        if: steps.check_status.outputs.status == 'failure'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.MAIL_SERVER }}
+          server_port: ${{ secrets.MAIL_PORT }}
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: ❌ Travelmate FE-Web Deployment Failed At ${{ steps.get_time.outputs.time }}
+          to: ${{ secrets.RECEIVER_EMAIL }}
+          from: ${{ secrets.MAIL_USERNAME }}
+          body: |
+            ❌ Travelmate fe-web deployment to EC2 has failed after multiple attempts!
+
+            ➤ Git Branch: master
+            ➤ Commit: ${{ github.sha }}
+            ➤ Commit Message: ${{ github.event.head_commit.message }}
+            ➤ Time: ${{ github.event.head_commit.timestamp }}
+            ➤ Workflow: ${{ github.workflow }}
+            ➤ Run ID: ${{ github.run_id }}
+            
+            📊 Deployment Status:
+            - Pull code step: ${{ steps.ssh_pull.outcome }}
+            - Stop containers step: ${{ steps.ssh_stop.outcome }}
+            - Build step: ${{ steps.ssh_build.outcome }}
+            - Retry step: ${{ steps.retry_deploy.outcome }}
+            
+            🛠️ Troubleshooting Steps:
+            1. SSH into the server and check: docker ps -a
+            2. Check container logs: docker logs <container_id>
+            3. Try manual restart: cd /mnt/data/Travelmate/Travelmate-FE-Web && docker-compose down && docker-compose up -d
+            
+            View complete workflow logs:
+            https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            
+  # Watchdog job that runs after the main job completes or times out
+  notification-watchdog:
+    needs: deploy
+    if: always() # This ensures it runs even if the main job times out or fails
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get current time
+        id: get_time
+        run: echo "time=$(date '+%Y-%m-%d %H:%M:%S')" >> $GITHUB_OUTPUT
+        
+      - name: Check if main job timed out or failed
+        id: check_job_status
+        run: |
+          if [[ "${{ needs.deploy.result }}" == "failure" || "${{ needs.deploy.result }}" == "cancelled" ]]; then
+            echo "status=failure" >> $GITHUB_OUTPUT
+          else
+            echo "status=success" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Collect server status information
+        if: steps.check_job_status.outputs.status == 'failure'
+        id: server_check
+        continue-on-error: true
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          command_timeout: 1m
+          script: |
+            echo "::group::Container Status"
+            docker ps -a | grep travelmate-fe-web || echo "No travelmate containers found"
+            echo "::endgroup::"
+            
+            echo "::group::System Load"
+            uptime
+            free -h
+            df -h
+            echo "::endgroup::"
+            
+            echo "::group::Docker Status"
+            docker info | grep "Running\|Containers"
+            echo "::endgroup::"
+
+      - name: Send timeout notification
+        if: steps.check_job_status.outputs.status == 'failure'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.MAIL_SERVER }}
+          server_port: ${{ secrets.MAIL_PORT }}
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: ⏰ Travelmate FE-Web Deployment Timed Out At ${{ steps.get_time.outputs.time }}
+          to: ${{ secrets.RECEIVER_EMAIL }}
+          from: ${{ secrets.MAIL_USERNAME }}
+          body: |
+            ⚠️ Travelmate fe-web deployment to EC2 has timed out or was cancelled!
+
+            ➤ Git Branch: master
+            ➤ Commit: ${{ github.sha }}
+            ➤ Commit Message: ${{ github.event.head_commit.message }}
+            ➤ Time: ${{ github.event.head_commit.timestamp }}
+            ➤ Workflow: ${{ github.workflow }}
+            ➤ Run ID: ${{ github.run_id }}
+            ➤ Result: ${{ needs.deploy.result }}
+            
+            � Timeout Troubleshooting:
+            1. SSH into server and check deployment status: docker ps -a
+            2. Check for resource constraints: top, free -m, df -h
+            3. Look for stuck processes: docker ps -a | grep -i exit
+            4. Review docker logs: docker logs <container_id>
+            5. Manually complete deployment:
+               ```
+               cd /mnt/data/Travelmate/Travelmate-FE-Web
+               git pull origin master
+               docker-compose down
+               docker-compose up -d
+               ```
+            
+            After resolving the issue, please consider:
+            • Increasing Docker build timeouts
+            • Optimizing Docker image size
+            • Adding resource limits to containers
+            
+            View complete workflow logs:
+            https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
             
