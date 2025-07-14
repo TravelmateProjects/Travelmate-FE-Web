@@ -30,10 +30,13 @@ jobs:
           rm -rf node_modules/.vite
           # Add timestamp to force changes
           echo "// Build: $(date)" >> src/configs/api.ts
+          # Check for old IP addresses and replace them
+          find src -type f -name "*.ts" -o -name "*.tsx" -o -name "*.js" | xargs grep -l "3.93.248.130" || echo "No old IP found"
           # Build without cache
           npm run build
         env:
           NODE_OPTIONS: "--max-old-space-size=6144"
+          VITE_API_BASE_URL: "http://34.207.66.178:5000/"
           
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.0
@@ -85,10 +88,14 @@ jobs:
             # Replace with new pre-built dist
             cp -r /mnt/data/Travelmate/deployment-temp/dist .
             
+            # Update environment variables in docker-compose
+            echo "🔧 Updating environment variables..."
+            echo "VITE_API_BASE_URL=http://34.207.66.178:5000/" > .env
+            
             # Ensure Docker will use pre-built files without rebuilding
-            # Update Dockerfile if needed to skip build
             echo "🚀 Starting container with pre-built files..."
-            docker-compose up -d
+            # Force rebuild with no cache
+            docker-compose up -d --build --force-recreate
             
             # Clean up
             echo "🧼 Cleaning up..."
