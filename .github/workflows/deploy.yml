@@ -30,8 +30,8 @@ jobs:
           rm -rf node_modules/.vite
           # Add timestamp to force changes
           echo "// Build: $(date)" >> src/configs/api.ts
-          # Build with verbose output
-          npm run build -- --force
+          # Build without cache
+          npm run build
         env:
           NODE_OPTIONS: "--max-old-space-size=6144"
           
