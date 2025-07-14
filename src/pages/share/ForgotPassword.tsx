@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Form, Button, Alert, Spinner, Card, Container, Row, Col } from 'react-bootstrap';
+import { Form, Button, Spinner, Card, Container, Row, Col } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import authService from '../../services/authService';
 import bgImage from '../../images/background.jpg';

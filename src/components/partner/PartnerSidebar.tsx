@@ -1,13 +1,9 @@
 // PartnerSidebar.tsx
 import React, { useState } from "react";
 import {
-  Nav,
   Button,
   Stack,
   Card,
-  Collapse,
-  OverlayTrigger,
-  Tooltip,
 } from "react-bootstrap";
 import {
   FiChevronLeft,
