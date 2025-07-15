@@ -69,8 +69,21 @@ const AppRoutes: React.FC = () => {
 
   return (
     <Routes>
-      {/* Root Route - Landing Page */}
-      <Route path="/" element={<LandingPage />} />
+      {/* Root Route - Redirect based on authentication status */}
+      <Route 
+        path="/" 
+        element={
+          state.isAuthenticated ? (
+            state.account?.role === "admin" ? (
+              <Navigate to="/admin/home" replace />
+            ) : (
+              <Navigate to="/partner/home" replace />
+            )
+          ) : (
+            <LandingPage />
+          )
+        } 
+      />
 
       {/* Public Routes */}
       <Route path="/login" element={<Login />} />
