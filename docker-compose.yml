@@ -3,5 +3,5 @@ services:
   travelmate-fe-web:
     build: .
     ports:
-      - "3000:3000"  # Host port 3000 → Container port 3000
+      - "3000:3000"
     restart: unless-stopped
