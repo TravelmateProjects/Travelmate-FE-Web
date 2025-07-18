@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getAllUsers } from '../../services/userService';
+import { getAllUsers, getAllAccounts, getAllProAccounts, getProRevenueStats } from '../../services/userService';
 import { getAllTravelHistories } from '../../services/travelHistoryService';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell
@@ -15,31 +15,39 @@ const AdminHome: React.FC = () => {
   const [cancelledCount, setCancelledCount] = useState(0);
   const [inprogressCount, setInprogressCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [selectedChart, setSelectedChart] = useState<'user' | 'plan' | 'pie'>('user');
+  const [selectedChart, setSelectedChart] = useState('user'); // string type để tránh lỗi so sánh
   const [chartRange, setChartRange] = useState<'day' | 'week' | 'month'>('day');
+  const [accounts, setAccounts] = useState<any[]>([]);
+  const [proRevenue, setProRevenue] = useState<any[]>([]);
+  const [totalRevenue, setTotalRevenue] = useState(0);
 
   // Helper: group by day/week/month
   const groupByDate = (items: any[], dateField: string, range: 'day' | 'week' | 'month') => {
     const map: Record<string, number> = {};
     items.forEach(item => {
-      const d = new Date(item[dateField]);
+      // Hỗ trợ truy cập nested field như 'proInfo.activatedAt'
+      const value = dateField.includes('.') 
+        ? dateField.split('.').reduce((obj, key) => obj && obj[key], item)
+        : item[dateField];
+      const d = new Date(value);
+      if (!value || isNaN(d.getTime())) return; // Bỏ qua nếu không hợp lệ
       let key = '';
       if (range === 'day') {
         key = d.toISOString().slice(0, 10);
       } else if (range === 'week') {
-        // ISO week: yyyy-Www
         const year = d.getFullYear();
         const firstDayOfYear = new Date(year, 0, 1);
         const pastDaysOfYear = (d.getTime() - firstDayOfYear.getTime()) / 86400000;
-        // Week number (ISO):
         const week = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
         key = `${year}-W${week.toString().padStart(2, '0')}`;
       } else if (range === 'month') {
-        key = d.toISOString().slice(0, 7); // yyyy-mm
+        key = d.toISOString().slice(0, 7);
       }
       map[key] = (map[key] || 0) + 1;
     });
-    return Object.entries(map).map(([date, count]) => ({ date, count }));
+    return Object.entries(map)
+      .map(([date, count]) => ({ date, count }))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   };
 
   // Helper: tự động ẩn bớt nhãn nếu quá nhiều mốc
@@ -90,6 +98,12 @@ const AdminHome: React.FC = () => {
         // 1. Users
         const userRes = await getAllUsers();
         setUsers(userRes.data.data || []);
+        // 1b. Accounts (for Pro user chart)
+        // const accountRes = await getAllAccounts();
+        // setAccounts(accountRes.data.data || []);
+        // Lấy riêng danh sách pro accounts
+        const proAccountRes = await getAllProAccounts();
+        setAccounts(proAccountRes.data.data || []);
         // 2. Travel Histories (for chart)
         const allHistoriesRes = await getAllTravelHistories({ limit: 1000 });
         setTravelHistories(allHistoriesRes.data.data || []);
@@ -102,6 +116,10 @@ const AdminHome: React.FC = () => {
         setCancelledCount(cancelledRes.data.totalRecords || 0);
         const inprogressRes = await getAllTravelHistories({ status: 'inprogress', limit: 1_000 });
         setInprogressCount(inprogressRes.data.totalRecords || 0);
+        // 4. Pro revenue
+        const revenueRes = await getProRevenueStats();
+        setProRevenue(revenueRes.data.data || []);
+        setTotalRevenue((revenueRes.data.data || []).reduce((sum: number, t: any) => sum + (t.amount || 0), 0));
       } catch (e) {
         // eslint-disable-next-line no-console
         console.error(e);
@@ -120,6 +138,68 @@ const AdminHome: React.FC = () => {
     { name: 'Đang diễn ra', value: inprogressCount },
     { name: 'Đang lên kế hoạch', value: planningCount },
   ];
+  // Biểu đồ Pro user dựa vào account.proInfo.activatedAt
+  const proUserLineData = groupByDate(accounts, 'proInfo.activatedAt', chartRange);
+  // Biểu đồ doanh thu pro theo ngày/tháng, phân biệt theo gói
+  const revenueByDate = (() => {
+    // Lấy tất cả các mốc thời gian xuất hiện ở cả 2 gói
+    const allDates = Array.from(new Set(
+      proRevenue.flatMap(t => {
+        const d = new Date(t.createdAt);
+        if (isNaN(d.getTime())) return [];
+        if (chartRange === 'day') return [d.toISOString().slice(0, 10)];
+        if (chartRange === 'week') {
+          const year = d.getFullYear();
+          const firstDayOfYear = new Date(year, 0, 1);
+          const pastDaysOfYear = (d.getTime() - firstDayOfYear.getTime()) / 86400000;
+          const week = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+          return [`${year}-W${week.toString().padStart(2, '0')}`];
+        }
+        if (chartRange === 'month') return [d.toISOString().slice(0, 7)];
+        return [];
+      })
+    )).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
+
+    return allDates.map(date => {
+      const monthTotal = proRevenue
+        .filter(t => t.plan === 'month')
+        .filter(t => {
+          const d = new Date(t.createdAt);
+          if (isNaN(d.getTime())) return false;
+          let key = '';
+          if (chartRange === 'day') key = d.toISOString().slice(0, 10);
+          else if (chartRange === 'week') {
+            const year = d.getFullYear();
+            const firstDayOfYear = new Date(year, 0, 1);
+            const pastDaysOfYear = (d.getTime() - firstDayOfYear.getTime()) / 86400000;
+            const week = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+            key = `${year}-W${week.toString().padStart(2, '0')}`;
+          } else if (chartRange === 'month') key = d.toISOString().slice(0, 7);
+          return key === date;
+        })
+        .reduce((sum, t) => sum + (t.amount || 0), 0);
+
+      const yearTotal = proRevenue
+        .filter(t => t.plan === 'year')
+        .filter(t => {
+          const d = new Date(t.createdAt);
+          if (isNaN(d.getTime())) return false;
+          let key = '';
+          if (chartRange === 'day') key = d.toISOString().slice(0, 10);
+          else if (chartRange === 'week') {
+            const year = d.getFullYear();
+            const firstDayOfYear = new Date(year, 0, 1);
+            const pastDaysOfYear = (d.getTime() - firstDayOfYear.getTime()) / 86400000;
+            const week = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+            key = `${year}-W${week.toString().padStart(2, '0')}`;
+          } else if (chartRange === 'month') key = d.toISOString().slice(0, 7);
+          return key === date;
+        })
+        .reduce((sum, t) => sum + (t.amount || 0), 0);
+
+      return { date, monthTotal, yearTotal };
+    });
+  })();
 
   return (
     <div style={{ padding: 32, marginLeft: 32 }}>
@@ -137,6 +217,19 @@ const AdminHome: React.FC = () => {
           }}
         >
           Số người dùng mới
+        </button>
+        <button
+          onClick={() => setSelectedChart('proUser')}
+          style={{
+            padding: '8px 16px',
+            borderRadius: 6,
+            border: selectedChart === 'proUser' ? '2px solid #f39c12' : '1px solid #ccc',
+            background: selectedChart === 'proUser' ? '#fffbe6' : '#fff',
+            fontWeight: selectedChart === 'proUser' ? 'bold' : 'normal',
+            cursor: 'pointer',
+          }}
+        >
+          Số người dùng Pro
         </button>
         <button
           onClick={() => setSelectedChart('plan')}
@@ -163,6 +256,19 @@ const AdminHome: React.FC = () => {
           }}
         >
           Tỷ lệ trạng thái chuyến đi
+        </button>
+        <button
+          onClick={() => setSelectedChart('proRevenue')}
+          style={{
+            padding: '8px 16px',
+            borderRadius: 6,
+            border: selectedChart === 'proRevenue' ? '2px solid #f39c12' : '1px solid #ccc',
+            background: selectedChart === 'proRevenue' ? '#fffbe6' : '#fff',
+            fontWeight: selectedChart === 'proRevenue' ? 'bold' : 'normal',
+            cursor: 'pointer',
+          }}
+        >
+          Doanh thu
         </button>
       </div>
 
@@ -209,7 +315,6 @@ const AdminHome: React.FC = () => {
         <div style={{ minWidth: 350 }}>
            {selectedChart === 'user' && (
              <>
-               <h3>Số người dùng mới theo ngày</h3>
                <ResponsiveContainer width="100%" height={250}>
                  <LineChart data={userLineData} margin={{ top: 5, right: 20, left: 0, bottom: 40 }}>
                    <CartesianGrid strokeDasharray="3 3" />
@@ -227,9 +332,53 @@ const AdminHome: React.FC = () => {
                </ResponsiveContainer>
              </>
            )}
+           {selectedChart === 'proUser' && (
+             <>
+               <ResponsiveContainer width="100%" height={250}>
+                 <LineChart data={proUserLineData} margin={{ top: 5, right: 20, left: 0, bottom: 40 }}>
+                   <CartesianGrid strokeDasharray="3 3" />
+                   <XAxis
+                     dataKey="date"
+                     interval={getXAxisInterval(proUserLineData.length)}
+                     height={30}
+                     tickFormatter={formatDate}
+                   />
+                   <YAxis allowDecimals={false} />
+                   <Tooltip />
+                   <Legend layout="horizontal" verticalAlign="bottom" align="center" />
+                   <Line type="monotone" dataKey="count" stroke="#f39c12" name="User Pro" />
+                 </LineChart>
+               </ResponsiveContainer>
+               {/* Bảng chi tiết người dùng Pro */}
+               <div style={{ margin: '16px 0 24px 0', fontWeight: 600, fontSize: 18 }}>
+                 Danh sách người dùng Pro
+               </div>
+               <div style={{ overflowX: 'auto', marginBottom: 32 }}>
+                 <table style={{ borderCollapse: 'collapse', width: '100%', minWidth: 600 }}>
+                   <thead>
+                     <tr style={{ background: '#f3f6ff' }}>
+                       <th style={{ padding: 8, border: '1px solid #e0e7ef' }}>Username</th>
+                       <th style={{ padding: 8, border: '1px solid #e0e7ef' }}>Gói</th>
+                       <th style={{ padding: 8, border: '1px solid #e0e7ef' }}>Ngày mua</th>
+                       <th style={{ padding: 8, border: '1px solid #e0e7ef' }}>Ngày hết hạn</th>
+                     </tr>
+                   </thead>
+                   <tbody>
+                     {accounts.map((acc: any) => (
+                       <tr key={acc._id || acc.id}>
+                         <td style={{ padding: 8, border: '1px solid #e0e7ef' }}>{acc.username}</td>
+                         <td style={{ padding: 8, border: '1px solid #e0e7ef' }}>{acc.proInfo?.plan === 'year' ? 'Năm' : 'Tháng'}</td>
+                         <td style={{ padding: 8, border: '1px solid #e0e7ef' }}>{acc.proInfo?.activatedAt ? new Date(acc.proInfo.activatedAt).toLocaleString('vi-VN') : ''}</td>
+                         <td style={{ padding: 8, border: '1px solid #e0e7ef' }}>{acc.proInfo?.expireAt ? new Date(acc.proInfo.expireAt).toLocaleString('vi-VN') : ''}</td>
+                       </tr>
+                     ))}
+                   </tbody>
+                 </table>
+               </div>
+             </>
+           )}
            {selectedChart === 'plan' && (
              <>
-               <h3>Số chuyến đi được tạo theo ngày</h3>
                <ResponsiveContainer width="100%" height={250}>
                  <LineChart data={planLineData} margin={{ top: 5, right: 20, left: 0, bottom: 40 }}>
                    <CartesianGrid strokeDasharray="3 3" />
@@ -275,6 +424,30 @@ const AdminHome: React.FC = () => {
                  </PieChart>
                </ResponsiveContainer>
              </>
+           )}
+           {/* Tổng doanh thu Pro và biểu đồ doanh thu Pro chuyển sang tab riêng */}
+           {selectedChart === 'proRevenue' && (
+             <div style={{ minWidth: 350, marginBottom: 32 }}>
+               <div style={{ marginBottom: 24, fontWeight: 600, fontSize: 18, color: '#f39c12' }}>
+                 Tổng doanh thu: {totalRevenue.toLocaleString()} VND
+               </div>
+               <ResponsiveContainer width="100%" height={220}>
+                 <LineChart data={revenueByDate} margin={{ top: 5, right: 20, left: 0, bottom: 40 }}>
+                   <CartesianGrid strokeDasharray="3 3" />
+                   <XAxis
+                     dataKey="date"
+                     interval={getXAxisInterval(revenueByDate.length)}
+                     height={30}
+                     tickFormatter={formatDate}
+                   />
+                   <YAxis allowDecimals={false} />
+                   <Tooltip formatter={(value: any) => value.toLocaleString() + ' VND'} />
+                   <Legend layout="horizontal" verticalAlign="bottom" align="center" />
+                   <Line type="monotone" dataKey="monthTotal" stroke="#2F80ED" name="Doanh thu Pro tháng" />
+                   <Line type="monotone" dataKey="yearTotal" stroke="#F2C94C" name="Doanh thu Pro năm" />
+                 </LineChart>
+               </ResponsiveContainer>
+             </div>
            )}
          </div>
         )}

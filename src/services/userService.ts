@@ -13,6 +13,15 @@ export const getUserById = (userId: string) =>
   API.get(`/users/getUserById/${userId}`);
 
 export const getAllUsers = () =>
-  API.get('/users/getAllUsers'); 
+  API.get('/users/getAllUsers');
+
+export const getAllAccounts = () =>
+  API.get('/accounts/all');
+
+export const getAllProAccounts = () =>
+  API.get('/accounts/pro/all');
+
+export const getProRevenueStats = () =>
+  API.get('/stripe/pro-revenue-stats'); 
 
 

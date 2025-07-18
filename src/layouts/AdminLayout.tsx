@@ -6,7 +6,7 @@ const AdminLayout: React.FC = () => {
   const SIDEBAR_WIDTH = 240;
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', width: '100vw', overflowX: 'hidden' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', width: '100vw', overflowX: 'hidden', backgroundColor: 'rgb(245, 245, 245)' }}>
       <AdminSidebar />
       <div
         style={{
