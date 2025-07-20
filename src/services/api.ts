@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { API_BASE_URL, API_TIMEOUT } from '../configs/api';
 
+
 const API = axios.create({
   baseURL: API_BASE_URL,
   timeout: API_TIMEOUT,
@@ -9,6 +10,27 @@ const API = axios.create({
   },
   withCredentials: true, // Automatically send cookies with every request
 });
+
+// Add a request interceptor to attach the token from cookies
+function getCookie(name: string): string | undefined {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(';').shift();
+  return undefined;
+}
+
+API.interceptors.request.use(
+  (config) => {
+    // Get token from cookies
+    const token = getCookie('accessToken');
+    if (token) {
+      config.headers = config.headers || {};
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 // Add an interceptor to automatically refresh the token when the accessToken expires
 // API.interceptors.response.use(

@@ -12,7 +12,17 @@ export const updateProfile = (data: { fullName: string; phone: string; address: 
 export const getUserById = (userId: string) =>
   API.get(`/users/getUserById/${userId}`);
 
+
 export const getAllUsers = () =>
-  API.get('/users/getAllUsers'); 
+  API.get('/users/getAllUsers');
+
+export const searchUsers = (criteria: { username?: string; email?: string; status?: boolean }) =>
+  API.post('/users/searchUsers', criteria);
+
+export const lockUser = (userId: string) =>
+  API.put(`/users/lockUser/${userId}`);
+
+export const unlockUser = (userId: string) =>
+  API.put(`/users/unlockUser/${userId}`);
 
 

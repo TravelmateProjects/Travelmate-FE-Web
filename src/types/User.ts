@@ -20,4 +20,6 @@ export interface User {
   connections?: string[];
   createdAt?: string;
   updatedAt?: string;
+  accountStatus?: boolean;
+  role?: string;
 }
