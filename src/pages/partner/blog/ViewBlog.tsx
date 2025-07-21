@@ -9,6 +9,7 @@ import Captions from "yet-another-react-lightbox/plugins/captions";
 import "yet-another-react-lightbox/styles.css";
 import "yet-another-react-lightbox/plugins/captions.css";
 import "../../../assets/css/ViewBlog.css";
+import defaultAvatar from "../../../images/avatar_default.png";
 
 interface ViewBlogProps {
   id: string;
@@ -23,6 +24,11 @@ interface Blog {
   adTargetUrl?: string;
   images: { publicId: string; url: string }[];
   videos: { publicId: string; url: string }[];
+  userId: {
+    fullName: string;
+    email: string;
+    avatar?: { url: string; publicId: string };
+  };
 }
 
 interface Comment {
@@ -52,9 +58,6 @@ const ViewBlog: React.FC<ViewBlogProps> = ({ id, isModal = false }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [openLightbox, setOpenLightbox] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
-
-  const defaultAvatar =
-    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-5mtjxpAVAe11WGg2JNdR-imdm04QxHo3QA&s";
 
   useEffect(() => {
     const fetchBlogData = async () => {
@@ -170,7 +173,19 @@ const ViewBlog: React.FC<ViewBlogProps> = ({ id, isModal = false }) => {
           gap={2}
           className="mb-3 align-items-center"
         >
-          <Image src={defaultAvatar} roundedCircle width={40} height={40} />
+          <Image
+            src={blog.userId.avatar?.url || defaultAvatar}
+            roundedCircle
+            width={40}
+            height={40}
+            onError={(e) => {
+              e.currentTarget.src = defaultAvatar;
+            }}
+          />
+          <div>
+            <strong>{blog.userId.fullName}</strong>{" "}
+            {/* Hiển thị tên người đăng */}
+          </div>
         </Stack>
 
         {blog.address && (
@@ -248,7 +263,7 @@ const ViewBlog: React.FC<ViewBlogProps> = ({ id, isModal = false }) => {
                   width={32}
                   height={32}
                   onError={(e) => {
-                    e.currentTarget.src = defaultAvatar; // Fallback nếu ảnh lỗi
+                    e.currentTarget.src = defaultAvatar;
                   }}
                 />
                 <div
