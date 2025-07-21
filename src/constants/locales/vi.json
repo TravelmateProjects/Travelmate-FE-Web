@@ -11,5 +11,15 @@
   "expand_sidebar": "Mở rộng sidebar",
   "collapse_sidebar": "Thu nhỏ sidebar",
   "language": "Ngôn ngữ",
-  "change_password": "Đổi mật khẩu"
+  "change_password": "Đổi mật khẩu",
+  "partner_home_title": "Trang chủ Partner",
+  "partner_home_welcome": "Chào mừng bạn đến Travelmate!",
+  "loading_data": "Đang tải dữ liệu...",
+  "albums": "Albums",
+  "blogs": "Bài viết",
+  "view": "Xem",
+  "view_blog": "Xem Bài Viết",
+  "no_image": "Không có ảnh",
+  "no_name": "Không tên",
+  "unknown": "Không rõ"
 }

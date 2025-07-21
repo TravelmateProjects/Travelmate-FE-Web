@@ -11,5 +11,15 @@
   "expand_sidebar": "Expand sidebar",
   "collapse_sidebar": "Collapse sidebar",
   "language": "Language",
-  "change_password": "Change Password"
+  "change_password": "Change Password",
+  "partner_home_title": "Partner Home",
+  "partner_home_welcome": "Welcome to Travelmate!",
+  "loading_data": "Loading data...",
+  "albums": "Albums",
+  "blogs": "Blogs",
+  "view": "View",
+  "view_blog": "View Blog",
+  "no_image": "No Image",
+  "no_name": "No name",
+  "unknown": "Unknown"
 }
