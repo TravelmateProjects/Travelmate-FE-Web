@@ -19,6 +19,7 @@ import AlbumsManagement from "../pages/partner/albums/AlbumsManagement";
 import PartnerProfile from '../pages/partner/Profile';
 import CreatePartner from '../pages/admin/CreatePartner';
 import ChangePassword from '../pages/partner/ChangePassword';
+import LandingPage from "../pages/LandingPage";
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ allowedRole: string }> = ({ allowedRole }) => {
@@ -68,6 +69,22 @@ const AppRoutes: React.FC = () => {
 
   return (
     <Routes>
+      {/* Root Route - Redirect based on authentication status */}
+      <Route 
+        path="/" 
+        element={
+          state.isAuthenticated ? (
+            state.account?.role === "admin" ? (
+              <Navigate to="/admin/home" replace />
+            ) : (
+              <Navigate to="/partner/home" replace />
+            )
+          ) : (
+            <LandingPage />
+          )
+        } 
+      />
+
       {/* Public Routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -100,22 +117,6 @@ const AppRoutes: React.FC = () => {
           {/* Placeholder, cần modal */}
         </Route>
       </Route>
-
-      {/* Root Route - Redirect based on authentication */}
-      <Route
-        path="/"
-        element={
-          state.isAuthenticated ? (
-            state.account?.role === "admin" ? (
-              <Navigate to="/admin/home" replace />
-            ) : (
-              <Navigate to="/partner/home" replace />
-            )
-          ) : (
-            <Navigate to="/login" replace />
-          )
-        }
-      />
 
       {/* Catch all route */}
       <Route path="*" element={<Navigate to="/login" replace />} />

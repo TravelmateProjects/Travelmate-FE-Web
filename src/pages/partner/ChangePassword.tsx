@@ -102,7 +102,7 @@ const ChangePassword: React.FC = () => {
             className="d-flex justify-content-center align-items-center"
             style={{
                 minHeight: "100vh",
-                background: "linear-gradient(to bottom right, #ffffff)",
+                background: "rgb(245, 245, 245)",
             }}
         >
             <Card

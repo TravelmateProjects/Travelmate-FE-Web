@@ -34,7 +34,7 @@ const CreatePartner: React.FC = () => {
   };
 
   return (
-    <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh', background: '#f8f9fa' }}>
+    <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '100vh', backgroundColor: 'rgb(245, 245, 245)' }}>
       <Card style={{ minWidth: 400, boxShadow: '0 2px 8px rgba(0,0,0,0.07)' }}>
         <Card.Body>
           <h3 className="mb-4">Tạo Partner mới</h3>
