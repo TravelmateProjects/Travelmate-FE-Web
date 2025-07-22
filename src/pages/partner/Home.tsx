@@ -73,8 +73,6 @@ const PartnerHome: React.FC = () => {
 
   return (
     <div style={{ padding: 32 }}>
-      <h1>{t('partner_home_title')}</h1>
-      <p>{t('partner_home_welcome')}</p>
       {loading ? <p>{t('loading_data')}</p> : (
         <>
           <h2>{t('albums')}</h2>

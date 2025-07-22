@@ -56,5 +56,7 @@
   "unknown": "Unknown",
   "page": "Page",
   "previous": "Previous",
-  "next": "Next"
+  "next": "Next",
+  "report": "Report",
+  "create_partner": "Create Partner"
 }

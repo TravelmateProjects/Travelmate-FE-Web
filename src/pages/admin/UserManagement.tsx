@@ -23,13 +23,13 @@ const UserManagement: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage] = useState(10);
 
- const normalizeGender = (gender?: string): 'male' | 'female' | 'other' => {
-  const lower = typeof gender === 'string' ? gender.toLowerCase().trim() : '';
+  const normalizeGender = (gender?: string): 'male' | 'female' | 'other' => {
+    const lower = typeof gender === 'string' ? gender.toLowerCase().trim() : '';
 
-  if (['male', 'nam'].includes(lower)) return 'male';
-  if (['female', 'nữ', 'nu'].includes(lower)) return 'female';
-  return 'other';
-};
+    if (['male', 'nam'].includes(lower)) return 'male';
+    if (['female', 'nữ', 'nu'].includes(lower)) return 'female';
+    return 'other';
+  };
 
 
 
@@ -165,10 +165,10 @@ const UserManagement: React.FC = () => {
         )}
 
         <PaginationComponent
-  currentPage={currentPage}
-  totalPages={totalPages}
-  onPageChange={(page) => setCurrentPage(page)}
-/>
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={(page) => setCurrentPage(page)}
+        />
 
         {/* Detail modal giữ nguyên */}
         {selectedUser && (
@@ -197,14 +197,14 @@ const UserManagement: React.FC = () => {
               <div style={{ marginBottom: 10 }}><b>{t('userManagement.role')}:</b> {selectedUser.account?.role}</div>
               <div style={{ marginBottom: 10 }}><b>{t('userManagement.status')}:</b> <span style={{ color: selectedUser.account?.accountStatus ? '#219653' : '#eb5757', fontWeight: 600 }}>{selectedUser.account?.accountStatus ? t('userManagement.active') : t('userManagement.inactive')}</span></div>
               <div style={{ marginBottom: 10 }}><b>{t('userManagement.fullName')}:</b> {selectedUser.fullName}</div>
-              <div style={{ marginBottom: 10 }}><b>{t('userManagement.dob')}:</b> {selectedUser.dob}</div>
+              <div style={{ marginBottom: 10 }}><b>{t('userManagement.dob', { defaultValue: 'Ngày sinh' })}:</b> {selectedUser.dob ? new Date(selectedUser.dob).toLocaleDateString() : ''}</div>
               <div style={{ marginBottom: 10 }}><b>{t('userManagement.phone')}:</b> {selectedUser.phone}</div>
               <div style={{ marginBottom: 10 }}><b>{t('userManagement.address')}:</b> {selectedUser.address}</div>
               <div style={{ marginBottom: 10 }}><b>{t('userManagement.hometown')}:</b> {selectedUser.hometown}</div>
               <div style={{ marginBottom: 10 }}>
-  <b>{t('userManagement.gender')}:</b>{' '}
-  {t(`userManagement.gender_${normalizeGender(selectedUser.gender)}`)}
-</div>
+                <b>{t('userManagement.gender')}:</b>{' '}
+                {t(`userManagement.gender_${normalizeGender(selectedUser.gender)}`)}
+              </div>
 
               <div style={{ marginBottom: 10 }}><b>{t('userManagement.cccd')}:</b> {selectedUser.cccd}</div>
               <div style={{ marginBottom: 10 }}><b>{t('userManagement.hobbies')}:</b> {selectedUser.hobbies?.join(', ')}</div>
