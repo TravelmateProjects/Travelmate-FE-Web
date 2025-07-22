@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getAllUsers, getAllProAccounts, getProRevenueStats } from '../../services/userService';
+import { getAllUsersforstatistics, getAllProAccounts, getProRevenueStats } from '../../services/userService';
 import { getAllTravelHistories } from '../../services/travelHistoryService';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell
@@ -96,7 +96,7 @@ const AdminHome: React.FC = () => {
       setLoading(true);
       try {
         // 1. Users
-        const userRes = await getAllUsers();
+        const userRes = await getAllUsersforstatistics();
         setUsers(userRes.data.data || []);
         // 1b. Accounts (for Pro user chart)
         // const accountRes = await getAllAccounts();

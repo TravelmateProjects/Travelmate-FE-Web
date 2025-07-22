@@ -29,7 +29,17 @@
     "action": "Hành động",
     "lock": "Khoá",
     "unlock": "Mở khoá",
-    "detailTitle": "Chi tiết người dùng"
+    "detailTitle": "Chi tiết người dùng",
+    "searchTerm": "Tìm kiếm người dùng",
+     "dob": "Ngày sinh",
+  "phone": "Số điện thoại",
+  "address": "Địa chỉ",
+  "hometown": "Quê quán",
+  "gender": "Giới tính",
+  "cccd": "CCCD",
+  "hobbies": "Sở thích",
+  "description": "Mô tả",
+  "job": "Công việc"
   },
   "partner_home_title": "Trang chủ Partner",
   "partner_home_welcome": "Chào mừng bạn đến Travelmate!",

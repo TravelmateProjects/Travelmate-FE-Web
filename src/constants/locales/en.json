@@ -29,7 +29,17 @@
     "action": "Action",
     "lock": "Lock",
     "unlock": "Unlock",
-    "detailTitle": "User Details"
+    "detailTitle": "User Details",
+    "searchTerm": "Search Users",
+    "dob": "Date of Birth",
+  "phone": "Phone",
+  "address": "Address",
+  "hometown": "Hometown",
+  "gender": "Gender",
+  "cccd": "Citizen ID",
+  "hobbies": "Hobbies",
+  "description": "Description",
+  "job": "Job"
   },
   "partner_home_title": "Partner Home",
   "partner_home_welcome": "Welcome to Travelmate!",
