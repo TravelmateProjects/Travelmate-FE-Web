@@ -108,6 +108,20 @@ const PartnerSidebar: React.FC = () => {
                 : navigate("/partner/profile")
             }
           />
+
+
+          <SidebarItem
+            collapsed={collapsed}
+            icon={<FiEdit3 size={18} />}
+            label="Blog"
+            onClick={() => navigate("/partner/blog")}
+          />
+          <SidebarItem
+            collapsed={collapsed}
+            icon={<FiImage size={18} />}
+            label="Albums"
+            onClick={() => navigate("/partner/albums")}
+          />
           <SidebarItem
             collapsed={collapsed}
             icon={<FiSettings size={18} />}
@@ -124,45 +138,32 @@ const PartnerSidebar: React.FC = () => {
           />
 
 
-<AnimatePresence initial={false}>
-  {settingsOpen && !collapsed && (
-    <motion.div
-      className="ms-2"
-      initial={{ height: 0, opacity: 0 }}
-      animate={{ height: "auto", opacity: 1 }}
-      exit={{ height: 0, opacity: 0 }}
-      transition={{ duration: 0.3, ease: "easeInOut" }}
-    >
-      <SidebarItem
-        collapsed={false}
-        icon={<FiKey size={16} />}
-        label={t("change_password")}
-        onClick={() => navigate("/partner/change-password")}
-        style={{
-          background: "rgba(255,255,255,0.1)",
-          color: "#fff",
-          fontWeight: 500,
-          paddingLeft: 32,
-          borderRadius: 6,
-        }}
-      />
-    </motion.div>
-  )}
-</AnimatePresence>
+          <AnimatePresence initial={false}>
+            {settingsOpen && !collapsed && (
+              <motion.div
+                className="ms-2"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+              >
+                <SidebarItem
+                  collapsed={false}
+                  icon={<FiKey size={16} />}
+                  label={t("change_password")}
+                  onClick={() => navigate("/partner/change-password")}
+                  style={{
+                    background: "rgba(255,255,255,0.1)",
+                    color: "#fff",
+                    fontWeight: 500,
+                    paddingLeft: 32,
+                    borderRadius: 6,
+                  }}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-
-          <SidebarItem
-            collapsed={collapsed}
-            icon={<FiEdit3 size={18} />}
-            label="Blog"
-            onClick={() => navigate("/partner/blog")}
-          />
-          <SidebarItem
-            collapsed={collapsed}
-            icon={<FiImage size={18} />}
-            label="Albums"
-            onClick={() => navigate("/partner/albums")}
-          />
         </Stack>
 
         {/* Language Switch */}

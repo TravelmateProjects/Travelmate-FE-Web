@@ -108,13 +108,13 @@ const AdminSidebar: React.FC = () => {
             {!collapsed && <span className="ms-2">{t('create_partner')}</span>}
           </Nav.Link>
 
-          <Nav.Link
-            onClick={() => navigate('/admin/settings')}
+           <Nav.Link
+            onClick={() => navigate('/admin/reports')}
             className="text-white rounded-3 py-2 px-2 w-100 d-flex align-items-center"
             style={{ background: 'rgba(255,255,255,0.1)', fontWeight: 500 }}
           >
-            <FiSettings size={18} />
-            {!collapsed && <span className="ms-2">{t('settings')}</span>}
+            <FiBarChart2 size={18} />
+            {!collapsed && <span className="ms-2">{t('report')}</span>}
           </Nav.Link>
         </Stack>
 
