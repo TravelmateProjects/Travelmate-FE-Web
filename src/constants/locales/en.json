@@ -39,7 +39,10 @@
   "cccd": "Citizen ID",
   "hobbies": "Hobbies",
   "description": "Description",
-  "job": "Job"
+  "job": "Job",
+  "gender_male": "Male",
+  "gender_female": "Female",
+  "gender_other": "Other"
   },
   "partner_home_title": "Partner Home",
   "partner_home_welcome": "Welcome to Travelmate!",
@@ -50,5 +53,8 @@
   "view_blog": "View Blog",
   "no_image": "No Image",
   "no_name": "No name",
-  "unknown": "Unknown"
+  "unknown": "Unknown",
+  "page": "Page",
+  "previous": "Previous",
+  "next": "Next"
 }

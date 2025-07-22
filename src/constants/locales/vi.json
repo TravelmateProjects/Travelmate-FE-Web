@@ -39,7 +39,10 @@
   "cccd": "CCCD",
   "hobbies": "Sở thích",
   "description": "Mô tả",
-  "job": "Công việc"
+  "job": "Công việc",
+   "gender_male": "Nam",
+  "gender_female": "Nữ",
+  "gender_other": "Khác"
   },
   "partner_home_title": "Trang chủ Partner",
   "partner_home_welcome": "Chào mừng bạn đến Travelmate!",
@@ -50,5 +53,8 @@
   "view_blog": "Xem Bài Viết",
   "no_image": "Không có ảnh",
   "no_name": "Không tên",
-  "unknown": "Không rõ"
+  "unknown": "Không rõ",
+  "page": "Trang",
+  "previous": "Trước",
+  "next": "Sau"
 }
