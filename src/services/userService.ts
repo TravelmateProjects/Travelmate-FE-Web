@@ -13,13 +13,12 @@ export const getUserById = (userId: string) =>
   API.get(`/users/getUserById/${userId}`);
 
 
-export const getAllUsers = (filters?: { username?: string; email?: string; status?: string }) => {
+export const getAllUsers = (filters?: { searchTerm?: string; status?: string }) => {
   let query = '';
   if (filters) {
     const params = new URLSearchParams();
-    if (filters.username) params.append('username', filters.username);
-    if (filters.email) params.append('email', filters.email);
-    if (filters.status) params.append('status', filters.status === 'active' ? 'active' : 'inactive');
+    if (filters.searchTerm) params.append('searchTerm', filters.searchTerm);
+    if (filters.status) params.append('status', filters.status);
     query = '?' + params.toString();
   }
   return API.get('/users/getAllUsers' + query);
@@ -40,4 +39,6 @@ export const getAllProAccounts = () =>
 export const getProRevenueStats = () =>
   API.get('/stripe/pro-revenue-stats'); 
 
+export const getAllUsersforstatistics = () =>
+  API.get('/users/getAllUsersforstatistics');
 
