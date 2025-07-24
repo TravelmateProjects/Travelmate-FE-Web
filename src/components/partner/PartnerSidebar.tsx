@@ -1,10 +1,6 @@
 // PartnerSidebar.tsx
 import React, { useState } from "react";
-import {
-  Button,
-  Stack,
-  Card,
-} from "react-bootstrap";
+import { Button, Stack, Card } from "react-bootstrap";
 import {
   FiChevronLeft,
   FiChevronRight,
@@ -21,12 +17,9 @@ import { useTranslation } from "react-i18next";
 import { useLanguage } from "../../hooks/useLanguage";
 import authService from "../../services/authService";
 import SidebarItem from "./SidebarItem";
-import { FiChevronDown, FiChevronUp, } from "react-icons/fi";
+import { FiChevronDown, FiChevronUp } from "react-icons/fi";
 import { FiImage } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
-
-
-
 
 const SIDEBAR_WIDTH = 240;
 const SIDEBAR_COLLAPSED_WIDTH = 64;
@@ -73,7 +66,9 @@ const PartnerSidebar: React.FC = () => {
         <div className="d-flex align-items-center justify-content-between px-3 py-3 border-bottom border-white-25">
           {!collapsed && (
             <div>
-              <div style={{ fontWeight: 600, fontSize: 16 }}>👋 {t("welcome")}</div>
+              <div style={{ fontWeight: 600, fontSize: 16 }}>
+                👋 {t("welcome")}
+              </div>
               <div style={{ fontWeight: 700, fontSize: 18 }}>
                 {state.account?.username || "Partner"}
               </div>
@@ -86,7 +81,11 @@ const PartnerSidebar: React.FC = () => {
             style={{ border: "none", boxShadow: "none", width: 32, height: 32 }}
             onClick={() => setCollapsed(!collapsed)}
           >
-            {collapsed ? <FiChevronRight size={20} /> : <FiChevronLeft size={20} />}
+            {collapsed ? (
+              <FiChevronRight size={20} />
+            ) : (
+              <FiChevronLeft size={20} />
+            )}
           </Button>
         </div>
 
@@ -109,17 +108,16 @@ const PartnerSidebar: React.FC = () => {
             }
           />
 
-
           <SidebarItem
             collapsed={collapsed}
             icon={<FiEdit3 size={18} />}
-            label="Blog"
+            label={t("blogs")}
             onClick={() => navigate("/partner/blog")}
           />
           <SidebarItem
             collapsed={collapsed}
             icon={<FiImage size={18} />}
-            label="Albums"
+            label={t("albums")}
             onClick={() => navigate("/partner/albums")}
           />
           <SidebarItem
@@ -132,11 +130,10 @@ const PartnerSidebar: React.FC = () => {
               (settingsOpen ? (
                 <FiChevronUp size={16} />
               ) : (
-                <FiChevronDown size={16} />)
-              )
+                <FiChevronDown size={16} />
+              ))
             }
           />
-
 
           <AnimatePresence initial={false}>
             {settingsOpen && !collapsed && (
@@ -163,7 +160,6 @@ const PartnerSidebar: React.FC = () => {
               </motion.div>
             )}
           </AnimatePresence>
-
         </Stack>
 
         {/* Language Switch */}
@@ -206,7 +202,6 @@ const PartnerSidebar: React.FC = () => {
             <FiLogOut size={18} style={{ marginRight: collapsed ? 0 : 8 }} />
             {!collapsed && t("logout")}
           </Button>
-
         </div>
       </Card.Body>
     </Card>

@@ -10,12 +10,14 @@ import {
   CloseButton,
   Alert,
 } from "react-bootstrap";
+import { useTranslation } from "react-i18next";
 import { FaImage, FaVideo, FaMapMarkerAlt } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import API from "../../../services/api";
 
 const AddBlog: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     content: "",
     address: "",
@@ -36,19 +38,17 @@ const AddBlog: React.FC = () => {
     e.preventDefault();
     // Kiểm tra nội dung bắt buộc
     if (!formData.content.trim()) {
-      setError("Nội dung là bắt buộc!");
+      setError(t("error_required_content"));
       return;
     }
     // Kiểm tra giới hạn 10 ảnh
     if (images.length > 10) {
-      setError(`Bạn đã chọn ${images.length} ảnh, tối đa chỉ 10 ảnh!`);
+      setError(t("error_max_images", { count: images.length }));
       return;
     }
     // Kiểm tra nếu không có ảnh hoặc video, hỏi người dùng
     if (images.length === 0 && !video) {
-      const confirm = window.confirm(
-        "Bạn chưa chọn ảnh hoặc video. Bạn có muốn đăng bài không?"
-      );
+      const confirm = window.confirm(t("confirm_no_media"));
       if (!confirm) return;
     }
 
@@ -69,13 +69,13 @@ const AddBlog: React.FC = () => {
       await API.post("/blog", data, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      setSuccess("Đăng bài thành công!");
+      setSuccess(t("success_post"));
       setTimeout(() => {
         navigate("/partner/blog");
         window.location.reload();
       }, 1000);
     } catch {
-      setError("Lỗi server, thử lại nhé!");
+      setError(t("error_server"));
     } finally {
       setIsSubmitting(false);
     }
@@ -92,14 +92,12 @@ const AddBlog: React.FC = () => {
       file.type.startsWith("image/")
     ); // Chỉ chấp nhận file ảnh
     if (newImages.length === 0) {
-      setError("Vui lòng chọn file ảnh hợp lệ!");
+      setError(t("error_invalid_image"));
       return;
     }
     if (images.length + newImages.length > 10) {
       setError(
-        `Bạn đã chọn ${
-          images.length + newImages.length
-        } ảnh, tối đa chỉ 10 ảnh!`
+        t("error_max_images", { count: images.length + newImages.length })
       );
       return;
     }
@@ -110,12 +108,12 @@ const AddBlog: React.FC = () => {
   const handleAddVideo = (file: FileList | null) => {
     if (!file || !file.length) return;
     if (video) {
-      setError("Chỉ được chọn 1 video!");
+      setError(t("error_one_video"));
       return;
     }
     const selectedVideo = file[0];
     if (!selectedVideo.type.startsWith("video/")) {
-      setError("Vui lòng chọn file video hợp lệ!");
+      setError(t("error_invalid_video"));
       return;
     }
     setVideo(selectedVideo);
@@ -124,7 +122,7 @@ const AddBlog: React.FC = () => {
 
   const handleUpdateLocation = () => {
     if (!navigator.geolocation) {
-      setError("Trình duyệt không hỗ trợ vị trí!");
+      setError(t("error_no_geolocation"));
       return;
     }
     navigator.geolocation.getCurrentPosition(
@@ -147,14 +145,14 @@ const AddBlog: React.FC = () => {
             .trim();
           setFormData((prev) => ({
             ...prev,
-            address: detailedAddress || "Vị trí không xác định",
+            address: detailedAddress || t("unknown_location"),
           }));
           setError(null);
         } catch {
-          setError("Lấy vị trí thất bại, thử lại nhé!");
+          setError(t("error_geolocation_failed"));
         }
       },
-      () => setError("Quyền vị trí bị từ chối!")
+      () => setError(t("error_geolocation_denied"))
     );
   };
 
@@ -179,7 +177,7 @@ const AddBlog: React.FC = () => {
         </Stack>
         <Form.Control
           as="textarea"
-          placeholder="Bạn đang nghĩ gì thế?"
+          placeholder={t("placeholder_thoughts")}
           className="border-0 shadow-none mb-3"
           style={{
             resize: "none",
@@ -231,7 +229,7 @@ const AddBlog: React.FC = () => {
             className="btn btn-outline-secondary d-flex align-items-center gap-1 p-1"
             style={{ minWidth: "60px" }}
           >
-            <FaImage /> Ảnh
+            <FaImage /> {t("image")}
           </Form.Label>
           <Form.Control
             type="file"
@@ -248,7 +246,7 @@ const AddBlog: React.FC = () => {
             className="btn btn-outline-secondary d-flex align-items-center gap-1 p-1"
             style={{ minWidth: "60px" }}
           >
-            <FaVideo /> Video
+            <FaVideo /> {t("video")}
           </Form.Label>
           <Form.Control
             type="file"
@@ -267,11 +265,11 @@ const AddBlog: React.FC = () => {
             onClick={handleUpdateLocation}
             style={{ minWidth: "80px" }}
           >
-            <FaMapMarkerAlt /> Vị trí
+            <FaMapMarkerAlt /> {t("location")}
           </Button>
           <Form.Control
             type="text"
-            placeholder="Nhập vị trí"
+            placeholder={t("placeholder_location")}
             value={formData.address}
             onChange={(e) =>
               setFormData((prev) => ({ ...prev, address: e.target.value }))
@@ -287,7 +285,7 @@ const AddBlog: React.FC = () => {
         </div>
         <Form.Check
           type="checkbox"
-          label="Đây là bài viết quảng cáo"
+          label={t("ad_checkbox")}
           checked={formData.isAd}
           onChange={(e) =>
             setFormData((prev) => ({
@@ -301,7 +299,7 @@ const AddBlog: React.FC = () => {
         {formData.isAd && (
           <Form.Control
             type="text"
-            placeholder="URL quảng cáo"
+            placeholder={t("ad_url_placeholder")}
             value={formData.adTargetUrl}
             onChange={(e) =>
               setFormData((prev) => ({ ...prev, adTargetUrl: e.target.value }))
@@ -321,7 +319,7 @@ const AddBlog: React.FC = () => {
         )}
         <div className="d-grid mt-3" style={{ textAlign: "center" }}>
           <Button type="submit" variant="primary" disabled={isSubmitting}>
-            {isSubmitting ? "Đang đăng..." : "Đăng bài"}
+            {isSubmitting ? t("submitting") : t("post_button")}
           </Button>
         </div>
       </Form>
