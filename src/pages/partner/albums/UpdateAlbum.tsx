@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Form, Button, Alert, Row, Col, Image, Spinner } from "react-bootstrap";
+import { useTranslation } from "react-i18next";
 import API from "../../../services/api";
 import { BiImageAdd } from "react-icons/bi";
 
@@ -14,6 +15,7 @@ interface AlbumImage {
 }
 
 const UpdateAlbum: React.FC<UpdateAlbumProps> = ({ albumId, onSuccess }) => {
+  const { t } = useTranslation();
   const [albumName, setAlbumName] = useState("");
   const [originalAlbumName, setOriginalAlbumName] = useState("");
   const [files, setFiles] = useState<File[]>([]);
@@ -34,11 +36,11 @@ const UpdateAlbum: React.FC<UpdateAlbumProps> = ({ albumId, onSuccess }) => {
         setExistingImages(imagesResponse.data.images || []);
       } catch (err) {
         console.error("Error fetching album info:", err);
-        setError("Failed to load album information");
+        setError(t("error_load_album_info"));
       }
     };
     fetchAlbum();
-  }, [albumId]);
+  }, [albumId, t]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
@@ -48,16 +50,14 @@ const UpdateAlbum: React.FC<UpdateAlbumProps> = ({ albumId, onSuccess }) => {
       files.length +
       selectedFiles.length;
     if (totalImages > 20) {
-      setError(
-        "Cannot upload more images. The maximum is 20 images per album."
-      );
+      setError(t("error_max_images"));
       return;
     }
     setFiles([...files, ...selectedFiles]);
     const newPreviews = selectedFiles.map((file) => URL.createObjectURL(file));
     setPreviews([...previews, ...newPreviews]);
     if (totalImages === 20) {
-      setError("Maximum of 20 images reached. No more images can be added.");
+      setError(t("error_max_images_reached"));
     } else {
       setError(null);
     }
@@ -78,7 +78,7 @@ const UpdateAlbum: React.FC<UpdateAlbumProps> = ({ albumId, onSuccess }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!albumName) {
-      setError("Please enter an album name.");
+      setError(t("error_no_album_name"));
       return;
     }
 
@@ -111,7 +111,7 @@ const UpdateAlbum: React.FC<UpdateAlbumProps> = ({ albumId, onSuccess }) => {
       onSuccess();
     } catch (err) {
       console.error("Error updating album:", err);
-      setError("Failed to update album");
+      setError(t("error_update_album"));
     } finally {
       setLoading(false);
     }
@@ -130,16 +130,16 @@ const UpdateAlbum: React.FC<UpdateAlbumProps> = ({ albumId, onSuccess }) => {
           <Form onSubmit={handleSubmit}>
             {error && <Alert variant="danger">{error}</Alert>}
             <Form.Group className="mb-4">
-              <Form.Label>Album Name</Form.Label>
+              <Form.Label>{t("album_name")}</Form.Label>
               <Form.Control
                 type="text"
                 value={albumName}
                 onChange={(e) => setAlbumName(e.target.value)}
-                placeholder="Enter album name"
+                placeholder={t("enter_album_name")}
               />
             </Form.Group>
             <Form.Group className="mb-4">
-              <Form.Label>Select New Images (Maximum 20)</Form.Label>
+              <Form.Label>{t("select_new_images")}</Form.Label>
               <div className="custom-file-upload">
                 <Button
                   variant="outline-primary"
@@ -147,7 +147,7 @@ const UpdateAlbum: React.FC<UpdateAlbumProps> = ({ albumId, onSuccess }) => {
                   htmlFor="file-upload"
                   className="d-flex align-items-center"
                 >
-                  <BiImageAdd className="me-2" /> Select New Images
+                  <BiImageAdd className="me-2" /> {t("select_images_button")}
                 </Button>
                 <Form.Control
                   id="file-upload"
@@ -174,12 +174,12 @@ const UpdateAlbum: React.FC<UpdateAlbumProps> = ({ albumId, onSuccess }) => {
                       role="status"
                       aria-hidden="true"
                     />{" "}
-                    Updating...
+                    {t("updating")}
                   </>
                 ) : isFormUnchanged ? (
-                  "Update Album"
+                  t("update_album_button")
                 ) : (
-                  "Update Album"
+                  t("update_album_button")
                 )}
               </Button>
             </div>
@@ -188,7 +188,7 @@ const UpdateAlbum: React.FC<UpdateAlbumProps> = ({ albumId, onSuccess }) => {
 
         {/* Right side: Image Previews Section */}
         <div className="col-md-8 p-3">
-          <h5>Selected Images</h5>
+          <h5>{t("selected_images")}</h5>
           {previews.length === 0 && existingImages.length === 0 ? (
             <div
               style={{
@@ -203,7 +203,7 @@ const UpdateAlbum: React.FC<UpdateAlbumProps> = ({ albumId, onSuccess }) => {
                 justifyContent: "center",
               }}
             >
-              No images selected
+              {t("no_images_selected")}
             </div>
           ) : (
             <Row>
@@ -212,7 +212,7 @@ const UpdateAlbum: React.FC<UpdateAlbumProps> = ({ albumId, onSuccess }) => {
                   <div style={{ position: "relative" }}>
                     <Image
                       src={image.url}
-                      alt="Existing Image"
+                      alt={t("existing_image")}
                       style={{
                         width: "100%",
                         height: "150px",
@@ -241,7 +241,7 @@ const UpdateAlbum: React.FC<UpdateAlbumProps> = ({ albumId, onSuccess }) => {
                   <div style={{ position: "relative" }}>
                     <Image
                       src={preview}
-                      alt={`Preview ${index}`}
+                      alt={`${t("preview")} ${index}`}
                       style={{
                         width: "100%",
                         height: "150px",
