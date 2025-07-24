@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Button, Table, Container, Modal, Alert } from "react-bootstrap";
+import { useTranslation } from "react-i18next";
 import API from "../../../services/api";
 import { useAuth } from "../../../hooks/useAuth";
 import AddBlog from "./AddBlog";
@@ -15,6 +16,7 @@ interface Blog {
 
 const BlogManagement: React.FC = () => {
   useAuth();
+  const { t } = useTranslation();
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,29 +30,21 @@ const BlogManagement: React.FC = () => {
   const [showStatisticsModal, setShowStatisticsModal] = useState(false);
   const [statisticsBlogId, setStatisticsBlogId] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchBlogs();
-  }, []);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [blogIdToDelete, setBlogIdToDelete] = useState<string | null>(null);
 
-  const fetchBlogs = async () => {
+  const fetchBlogs = useCallback(async () => {
     try {
       const response = await API.get("/blog");
       setBlogs(response.data.blogs);
     } catch {
-      setError("Failed to fetch blogs");
+      setError(t("error_fetch_blogs"));
     }
-  };
+  }, [t]);
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this blog?")) {
-      try {
-        await API.delete(`/blog/${id}`);
-        setBlogs(blogs.filter((blog) => blog._id !== id));
-      } catch {
-        setError("Failed to delete blog");
-      }
-    }
-  };
+  useEffect(() => {
+    fetchBlogs();
+  }, [fetchBlogs]);
 
   const handleAddClick = () => setShowAddModal(true);
 
@@ -69,6 +63,24 @@ const BlogManagement: React.FC = () => {
     setShowStatisticsModal(true);
   };
 
+  const handleDeleteClick = (id: string) => {
+    setBlogIdToDelete(id);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!blogIdToDelete) return;
+    try {
+      await API.delete(`/blog/${blogIdToDelete}`);
+      setBlogs(blogs.filter((blog) => blog._id !== blogIdToDelete));
+      setShowDeleteConfirm(false);
+      setBlogIdToDelete(null);
+    } catch {
+      setError(t("error_delete_blog"));
+      setShowDeleteConfirm(false);
+    }
+  };
+
   const truncateContent = (content: string) => {
     const words = content.trim().split(/\s+/);
     return words.length > 30 ? words.slice(0, 30).join(" ") + "..." : content;
@@ -77,18 +89,20 @@ const BlogManagement: React.FC = () => {
   return (
     <Container>
       {error && <Alert variant="danger">{error}</Alert>}
+
       <div className="d-flex justify-content-end mb-3">
         <Button variant="primary" onClick={handleAddClick}>
-          Add New Blog
+          {t("add_new_blog")}
         </Button>
       </div>
+
       <Table striped bordered hover>
         <thead>
           <tr>
             <th>#</th>
-            <th>Content</th>
-            <th>Image</th>
-            <th>Action</th>
+            <th>{t("content")}</th>
+            <th>{t("image")}</th>
+            <th>{t("action")}</th>
           </tr>
         </thead>
         <tbody>
@@ -100,7 +114,7 @@ const BlogManagement: React.FC = () => {
                 {blog.images && blog.images.length > 0 && (
                   <img
                     src={blog.images[0].url}
-                    alt="Blog"
+                    alt={t("blog_image")}
                     style={{
                       width: "100px",
                       height: "100px",
@@ -116,7 +130,7 @@ const BlogManagement: React.FC = () => {
                   onClick={() => handleViewClick(blog._id)}
                   className="me-2"
                 >
-                  View
+                  {t("view")}
                 </Button>
                 <Button
                   variant="warning"
@@ -124,22 +138,22 @@ const BlogManagement: React.FC = () => {
                   onClick={() => handleEditClick(blog._id)}
                   className="me-2"
                 >
-                  Edit
+                  {t("edit")}
                 </Button>
                 <Button
                   variant="danger"
                   size="sm"
-                  onClick={() => handleDelete(blog._id)}
+                  onClick={() => handleDeleteClick(blog._id)}
                   className="me-2"
                 >
-                  Delete
+                  {t("delete")}
                 </Button>
                 <Button
                   variant="secondary"
                   size="sm"
                   onClick={() => handleStatisticsClick(blog._id)}
                 >
-                  Statistics
+                  {t("statistics")}
                 </Button>
               </td>
             </tr>
@@ -154,7 +168,7 @@ const BlogManagement: React.FC = () => {
         size="lg"
       >
         <Modal.Header closeButton>
-          <Modal.Title>Tạo Bài Viết Mới</Modal.Title>
+          <Modal.Title>{t("add_new_blog_title")}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <AddBlog />
@@ -168,7 +182,7 @@ const BlogManagement: React.FC = () => {
         size="lg"
       >
         <Modal.Header closeButton>
-          <Modal.Title>Cập Nhật Bài Viết</Modal.Title>
+          <Modal.Title>{t("update_blog_title")}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {selectedBlogId && <UpdateBlog blogId={selectedBlogId} />}
@@ -180,20 +194,18 @@ const BlogManagement: React.FC = () => {
         show={showViewModal}
         onHide={() => setShowViewModal(false)}
         size="lg"
-        dialogClassName="modal-dialog-light" // Custom class for lighter modal
-        style={{ border: "none" }} // Remove modal border
+        dialogClassName="modal-dialog-light"
+        style={{ border: "none" }}
       >
         <Modal.Header
           closeButton
           style={{ border: "none", justifyContent: "center" }}
         >
           <Modal.Title style={{ flex: "1", textAlign: "center" }}>
-            Xem Bài Viết
+            {t("view_blog_title")}
           </Modal.Title>
         </Modal.Header>
         <Modal.Body style={{ padding: "10px" }}>
-          {" "}
-          {/* Tighter padding */}
           {viewBlogId && <ViewBlog id={viewBlogId} isModal />}
         </Modal.Body>
       </Modal>
@@ -205,13 +217,34 @@ const BlogManagement: React.FC = () => {
         size="lg"
       >
         <Modal.Header closeButton>
-          <Modal.Title>Thống kê tương tác & bình luận</Modal.Title>
+          <Modal.Title>{t("statistics_title")}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          {statisticsBlogId && (
-            <StatisticsModal blogId={statisticsBlogId} />
-          )}
+          {statisticsBlogId && <StatisticsModal blogId={statisticsBlogId} />}
         </Modal.Body>
+      </Modal>
+
+      {/* Confirm Delete Modal */}
+      <Modal
+        show={showDeleteConfirm}
+        onHide={() => setShowDeleteConfirm(false)}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>{t("confirm_delete_blog")}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>{t("confirm_delete_blog_message")}</Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() => setShowDeleteConfirm(false)}
+          >
+            {t("cancel")}
+          </Button>
+          <Button variant="danger" onClick={confirmDelete}>
+            {t("delete")}
+          </Button>
+        </Modal.Footer>
       </Modal>
     </Container>
   );
