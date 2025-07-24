@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Button, Card, Image, Row, Col, Stack, Alert } from "react-bootstrap";
+import { useTranslation } from "react-i18next";
 import API from "../../../services/api";
 import { FaMapMarkerAlt } from "react-icons/fa";
 
@@ -48,6 +49,7 @@ const reactionEmojis: { [key: string]: string } = {
 };
 
 const ViewBlog: React.FC<ViewBlogProps> = ({ id, isModal = false }) => {
+  const { t } = useTranslation();
   const [blog, setBlog] = useState<Blog | null>(null);
   const [reactionSummary, setReactionSummary] = useState<{
     totalReactions: number;
@@ -78,13 +80,13 @@ const ViewBlog: React.FC<ViewBlogProps> = ({ id, isModal = false }) => {
         console.log("Comments:", commentsResponse.data.comments); // Debug
         setComments(commentsResponse.data.comments);
       } catch {
-        setError("Không thể tải bài viết hoặc dữ liệu liên quan!");
+        setError(t("error_load_blog"));
       } finally {
         setIsLoading(false);
       }
     };
     if (id) fetchBlogData();
-  }, [id]);
+  }, [id, t]);
 
   const handleImageClick = (index: number) => {
     setLightboxIndex(index);
@@ -139,7 +141,7 @@ const ViewBlog: React.FC<ViewBlogProps> = ({ id, isModal = false }) => {
         className="p-3 shadow-sm"
         style={{ borderRadius: 20, border: "none" }}
       >
-        <div className="text-center">Đang tải...</div>
+        <div className="text-center">{t("loading")}</div>
       </Card>
     );
   }
@@ -150,7 +152,7 @@ const ViewBlog: React.FC<ViewBlogProps> = ({ id, isModal = false }) => {
         className="p-3 shadow-sm"
         style={{ borderRadius: 20, border: "none" }}
       >
-        <Alert variant="danger">Không tìm thấy bài viết!</Alert>
+        <Alert variant="danger">{t("error_no_blog")}</Alert>
       </Card>
     );
   }
@@ -240,7 +242,9 @@ const ViewBlog: React.FC<ViewBlogProps> = ({ id, isModal = false }) => {
               </span>
             </div>
             {comments.length > 0 && (
-              <span className="text-muted">{comments.length} bình luận</span>
+              <span className="text-muted">
+                {comments.length} {t("comments")}
+              </span>
             )}
           </div>
         )}
@@ -249,7 +253,7 @@ const ViewBlog: React.FC<ViewBlogProps> = ({ id, isModal = false }) => {
         {comments.length > 0 && (
           <div className="mt-3">
             <hr />
-            <h6>Bình luận</h6>
+            <h6>{t("comments")}</h6>
             {comments.map((comment) => (
               <Stack
                 key={comment._id}
@@ -290,7 +294,7 @@ const ViewBlog: React.FC<ViewBlogProps> = ({ id, isModal = false }) => {
 
         {blog.isAd && (
           <div className="mb-2">
-            <strong>Quảng cáo:</strong>{" "}
+            <strong>{t("ad_label")}: </strong>
             {blog.adTargetUrl ? (
               <a
                 href={blog.adTargetUrl}
@@ -300,7 +304,7 @@ const ViewBlog: React.FC<ViewBlogProps> = ({ id, isModal = false }) => {
                 {blog.adTargetUrl}
               </a>
             ) : (
-              "Không có URL quảng cáo"
+              t("no_ad_url")
             )}
           </div>
         )}
@@ -314,7 +318,7 @@ const ViewBlog: React.FC<ViewBlogProps> = ({ id, isModal = false }) => {
         {!isModal && (
           <div className="d-grid mt-3">
             <Button variant="primary" onClick={() => window.history.back()}>
-              Quay lại
+              {t("back")}
             </Button>
           </div>
         )}

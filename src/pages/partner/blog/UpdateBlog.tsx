@@ -10,6 +10,7 @@ import {
   CloseButton,
   Alert,
 } from "react-bootstrap";
+import { useTranslation } from "react-i18next";
 import { FaImage, FaVideo, FaMapMarkerAlt } from "react-icons/fa";
 import { useNavigate, useParams } from "react-router-dom";
 import API from "../../../services/api";
@@ -26,6 +27,7 @@ interface Media {
 const UpdateBlog: React.FC<UpdateBlogProps> = ({ blogId }) => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     content: "",
     address: "",
@@ -67,11 +69,11 @@ const UpdateBlog: React.FC<UpdateBlogProps> = ({ blogId }) => {
           }))
         );
       } catch {
-        setError("Không thể tải bài viết!");
+        setError(t("error_load_blog"));
       }
     };
     if (id || blogId) fetchBlog();
-  }, [id, blogId]);
+  }, [id, blogId, t]);
 
   const handleImageChange = (files: FileList | null) => {
     if (!files) return;
@@ -79,14 +81,14 @@ const UpdateBlog: React.FC<UpdateBlogProps> = ({ blogId }) => {
       file.type.startsWith("image/")
     );
     if (newImages.length === 0) {
-      setError("Vui lòng chọn file ảnh hợp lệ!");
+      setError(t("error_invalid_image"));
       return;
     }
     if (images.length + existingImages.length + newImages.length > 10) {
       setError(
-        `Bạn đã chọn ${
-          images.length + existingImages.length + newImages.length
-        } ảnh, tối đa chỉ 10 ảnh!`
+        t("error_max_images", {
+          count: images.length + existingImages.length + newImages.length,
+        })
       );
       return;
     }
@@ -98,12 +100,12 @@ const UpdateBlog: React.FC<UpdateBlogProps> = ({ blogId }) => {
   const handleVideoChange = (file: FileList | null) => {
     if (!file || !file.length) return;
     if (video || existingVideos.length > 0) {
-      setError("Chỉ được chọn 1 video!");
+      setError(t("error_one_video"));
       return;
     }
     const selectedVideo = file[0];
     if (!selectedVideo.type.startsWith("video/")) {
-      setError("Vui lòng chọn file video hợp lệ!");
+      setError(t("error_invalid_video"));
       return;
     }
     setVideo(selectedVideo);
@@ -137,7 +139,7 @@ const UpdateBlog: React.FC<UpdateBlogProps> = ({ blogId }) => {
 
   const handleUpdateLocation = () => {
     if (!navigator.geolocation) {
-      setError("Trình duyệt không hỗ trợ vị trí!");
+      setError(t("error_no_geolocation"));
       return;
     }
     navigator.geolocation.getCurrentPosition(
@@ -160,33 +162,33 @@ const UpdateBlog: React.FC<UpdateBlogProps> = ({ blogId }) => {
             .trim();
           setFormData((prev) => ({
             ...prev,
-            address: detailedAddress || "Vị trí không xác định",
+            address: detailedAddress || t("unknown_location"),
           }));
           setIsDirty(true);
           setError(null);
         } catch {
-          setError("Lấy vị trí thất bại, thử lại nhé!");
+          setError(t("error_geolocation_failed"));
         }
       },
-      () => setError("Quyền vị trí bị từ chối!")
+      () => setError(t("error_geolocation_denied"))
     );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isDirty) {
-      setError("Vui lòng thay đổi nội dung trước khi cập nhật!");
+      setError(t("error_no_changes"));
       return;
     }
     if (!formData.content.trim()) {
-      setError("Nội dung là bắt buộc!");
+      setError(t("error_required_content"));
       return;
     }
     if (images.length + existingImages.length > 10) {
       setError(
-        `Bạn đã chọn ${
-          images.length + existingImages.length
-        } ảnh, tối đa chỉ 10 ảnh!`
+        t("error_max_images", {
+          count: images.length + existingImages.length,
+        })
       );
       return;
     }
@@ -195,9 +197,7 @@ const UpdateBlog: React.FC<UpdateBlogProps> = ({ blogId }) => {
       !video &&
       existingVideos.length === 0
     ) {
-      const confirm = window.confirm(
-        "Bạn chưa chọn ảnh hoặc video. Bạn có muốn cập nhật bài không?"
-      );
+      const confirm = window.confirm(t("confirm_no_media"));
       if (!confirm) return;
     }
 
@@ -226,13 +226,13 @@ const UpdateBlog: React.FC<UpdateBlogProps> = ({ blogId }) => {
       await API.put(`/blog/${id || blogId}`, data, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      setSuccess("Cập nhật bài viết thành công!");
+      setSuccess(t("success_update"));
       setTimeout(() => {
         navigate("/partner/blog");
         window.location.reload();
       }, 1000);
     } catch {
-      setError("Lỗi server, thử lại nhé!");
+      setError(t("error_server"));
     } finally {
       setIsSubmitting(false);
     }
@@ -259,7 +259,7 @@ const UpdateBlog: React.FC<UpdateBlogProps> = ({ blogId }) => {
         </Stack>
         <Form.Control
           as="textarea"
-          placeholder="Bạn đang nghĩ gì thế?"
+          placeholder={t("placeholder_thoughts")}
           className="border-0 shadow-none mb-3"
           style={{
             resize: "none",
@@ -350,7 +350,7 @@ const UpdateBlog: React.FC<UpdateBlogProps> = ({ blogId }) => {
             className="btn btn-outline-secondary d-flex align-items-center gap-1 p-1"
             style={{ minWidth: "60px" }}
           >
-            <FaImage /> Ảnh
+            <FaImage /> {t("image")}
           </Form.Label>
           <Form.Control
             type="file"
@@ -367,7 +367,7 @@ const UpdateBlog: React.FC<UpdateBlogProps> = ({ blogId }) => {
             className="btn btn-outline-secondary d-flex align-items-center gap-1 p-1"
             style={{ minWidth: "60px" }}
           >
-            <FaVideo /> Video
+            <FaVideo /> {t("video")}
           </Form.Label>
           <Form.Control
             type="file"
@@ -386,11 +386,11 @@ const UpdateBlog: React.FC<UpdateBlogProps> = ({ blogId }) => {
             onClick={handleUpdateLocation}
             style={{ minWidth: "80px" }}
           >
-            <FaMapMarkerAlt /> Vị trí
+            <FaMapMarkerAlt /> {t("location")}
           </Button>
           <Form.Control
             type="text"
-            placeholder="Nhập vị trí"
+            placeholder={t("placeholder_location")}
             value={formData.address}
             onChange={(e) =>
               setFormData((prev) => ({ ...prev, address: e.target.value }))
@@ -407,7 +407,7 @@ const UpdateBlog: React.FC<UpdateBlogProps> = ({ blogId }) => {
         </div>
         <Form.Check
           type="checkbox"
-          label="Đây là bài viết quảng cáo"
+          label={t("ad_checkbox")}
           checked={formData.isAd}
           onChange={(e) =>
             setFormData((prev) => ({
@@ -422,7 +422,7 @@ const UpdateBlog: React.FC<UpdateBlogProps> = ({ blogId }) => {
         {formData.isAd && (
           <Form.Control
             type="text"
-            placeholder="URL quảng cáo"
+            placeholder={t("ad_url_placeholder")}
             value={formData.adTargetUrl}
             onChange={(e) =>
               setFormData((prev) => ({ ...prev, adTargetUrl: e.target.value }))
@@ -447,7 +447,7 @@ const UpdateBlog: React.FC<UpdateBlogProps> = ({ blogId }) => {
             variant="primary"
             disabled={isSubmitting || !isDirty}
           >
-            {isSubmitting ? "Đang cập nhật..." : "Cập nhật bài"}
+            {isSubmitting ? t("submitting") : t("update_button")}
           </Button>
         </div>
       </Form>
