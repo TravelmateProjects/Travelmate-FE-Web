@@ -20,4 +20,5 @@ export interface User {
   connections?: string[];
   createdAt?: string;
   updatedAt?: string;
+  gender?: string;
 }

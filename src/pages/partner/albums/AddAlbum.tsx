@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Form, Button, Alert, Row, Col, Image, Spinner } from "react-bootstrap";
+import { useTranslation } from "react-i18next";
 import API from "../../../services/api";
 import { BiImageAdd } from "react-icons/bi";
 
@@ -8,6 +9,7 @@ interface AddAlbumProps {
 }
 
 const AddAlbum: React.FC<AddAlbumProps> = ({ onSuccess }) => {
+  const { t } = useTranslation();
   const [albumName, setAlbumName] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
@@ -18,16 +20,14 @@ const AddAlbum: React.FC<AddAlbumProps> = ({ onSuccess }) => {
     const selectedFiles = Array.from(e.target.files || []);
     const totalFiles = files.length + selectedFiles.length;
     if (totalFiles > 20) {
-      setError(
-        "Cannot upload more images. The maximum is 20 images per album."
-      );
+      setError(t("error_max_images"));
       return;
     }
     setFiles([...files, ...selectedFiles]);
     const newPreviews = selectedFiles.map((file) => URL.createObjectURL(file));
     setPreviews([...previews, ...newPreviews]);
     if (totalFiles === 20) {
-      setError("Maximum of 20 images reached. No more images can be added.");
+      setError(t("error_max_images_reached"));
     }
   };
 
@@ -42,11 +42,11 @@ const AddAlbum: React.FC<AddAlbumProps> = ({ onSuccess }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!albumName) {
-      setError("Please enter an album name.");
+      setError(t("error_no_album_name"));
       return;
     }
     if (files.length === 0) {
-      setError("Please select at least one image.");
+      setError(t("error_no_images"));
       return;
     }
 
@@ -70,7 +70,7 @@ const AddAlbum: React.FC<AddAlbumProps> = ({ onSuccess }) => {
       onSuccess();
     } catch (err) {
       console.error("Error creating album:", err);
-      setError("Failed to create album.");
+      setError(t("error_create_album"));
     } finally {
       setLoading(false);
     }
@@ -86,16 +86,16 @@ const AddAlbum: React.FC<AddAlbumProps> = ({ onSuccess }) => {
           <Form onSubmit={handleSubmit}>
             {error && <Alert variant="danger">{error}</Alert>}
             <Form.Group className="mb-4">
-              <Form.Label>Album Name</Form.Label>
+              <Form.Label>{t("album_name")}</Form.Label>
               <Form.Control
                 type="text"
                 value={albumName}
                 onChange={(e) => setAlbumName(e.target.value)}
-                placeholder="Enter album name"
+                placeholder={t("enter_album_name")}
               />
             </Form.Group>
             <Form.Group className="mb-4">
-              <Form.Label>Select Images (Maximum 20)</Form.Label>
+              <Form.Label>{t("select_images")}</Form.Label>
               <div className="custom-file-upload">
                 <Button
                   variant="outline-primary"
@@ -103,7 +103,7 @@ const AddAlbum: React.FC<AddAlbumProps> = ({ onSuccess }) => {
                   htmlFor="file-upload"
                   className="d-flex align-items-center"
                 >
-                  <BiImageAdd className="me-2" /> Select Images
+                  <BiImageAdd className="me-2" /> {t("select_images_button")}
                 </Button>
                 <Form.Control
                   id="file-upload"
@@ -131,12 +131,12 @@ const AddAlbum: React.FC<AddAlbumProps> = ({ onSuccess }) => {
                       role="status"
                       aria-hidden="true"
                     />{" "}
-                    Uploading...
+                    {t("uploading")}
                   </>
                 ) : isFormEmpty ? (
-                  <>Upload Images</>
+                  <>{t("upload_images")}</>
                 ) : (
-                  "Upload Images"
+                  t("upload_images")
                 )}
               </Button>
             </div>
@@ -145,7 +145,7 @@ const AddAlbum: React.FC<AddAlbumProps> = ({ onSuccess }) => {
 
         {/* Right side: Image Previews Section */}
         <div className="col-md-8 p-3">
-          <h5>Selected Images</h5>
+          <h5>{t("selected_images")}</h5>
           {previews.length === 0 ? (
             <div
               style={{
@@ -160,7 +160,7 @@ const AddAlbum: React.FC<AddAlbumProps> = ({ onSuccess }) => {
                 justifyContent: "center",
               }}
             >
-              No images selected
+              {t("no_images_selected")}
             </div>
           ) : (
             <Row>
@@ -169,7 +169,7 @@ const AddAlbum: React.FC<AddAlbumProps> = ({ onSuccess }) => {
                   <div style={{ position: "relative" }}>
                     <Image
                       src={preview}
-                      alt={`Preview ${index}`}
+                      alt={`${t("preview")} ${index}`}
                       style={{
                         width: "100%",
                         height: "150px",

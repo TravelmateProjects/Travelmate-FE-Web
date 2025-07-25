@@ -6,6 +6,7 @@ import ForgotPassword from "../pages/share/ForgotPassword";
 import VerifyOtp from "../pages/share/VerifyOtp";
 import ResetPassword from "../pages/share/ResetPassword";
 import AdminHome from "../pages/admin/Home";
+import UserManagement from "../pages/admin/UserManagement";
 import PartnerHome from "../pages/partner/Home";
 import AdminLayout from "../layouts/AdminLayout";
 import PartnerLayout from "../layouts/PartnerLayout";
@@ -20,6 +21,7 @@ import PartnerProfile from '../pages/partner/Profile';
 import CreatePartner from '../pages/admin/CreatePartner';
 import ChangePassword from '../pages/partner/ChangePassword';
 import LandingPage from "../pages/LandingPage";
+import Reports from "../pages/admin/Reports";
 
 // Protected Route Component
 const ProtectedRoute: React.FC<{ allowedRole: string }> = ({ allowedRole }) => {
@@ -95,7 +97,9 @@ const AppRoutes: React.FC = () => {
       <Route element={<ProtectedRoute allowedRole="admin" />}>
         <Route path="/admin/*" element={<AdminLayout />}>
           <Route path="home" element={<AdminHome />} />
+          <Route path="users" element={<UserManagement />} />
           <Route path="create-partner" element={<CreatePartner />} />
+          <Route path="reports" element={<Reports/>} />
           <Route path="" element={<Navigate to="home" replace />} />
           {/* Add more admin routes here */}
         </Route>

@@ -9,6 +9,7 @@ import {
   Button,
 } from "react-bootstrap";
 import { FaImages, FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { useTranslation } from "react-i18next";
 import API from "../../../services/api";
 
 interface ViewAlbumProps {
@@ -22,6 +23,7 @@ interface ImageItem {
 }
 
 const ViewAlbum: React.FC<ViewAlbumProps> = ({ id, isModal }) => {
+  const { t } = useTranslation();
   const [album, setAlbum] = useState<{
     albumName: string;
     images: ImageItem[];
@@ -42,11 +44,11 @@ const ViewAlbum: React.FC<ViewAlbumProps> = ({ id, isModal }) => {
         });
       } catch (err) {
         console.error(err);
-        setError("Failed to load album.");
+        setError(t("error_load_album"));
       }
     };
     fetchAlbum();
-  }, [id]);
+  }, [id, t]);
 
   const handleDownload = (url: string) => {
     const link = document.createElement("a");
@@ -71,7 +73,7 @@ const ViewAlbum: React.FC<ViewAlbumProps> = ({ id, isModal }) => {
 
   if (error) return <Alert variant="danger">{error}</Alert>;
 
-  if (!album) return <div>Loading...</div>;
+  if (!album) return <div>{t("loading")}</div>;
 
   return (
     <Container fluid={isModal} className="text-center">
@@ -84,7 +86,7 @@ const ViewAlbum: React.FC<ViewAlbumProps> = ({ id, isModal }) => {
 
       <div className="mb-3 text-muted d-flex justify-content-center align-items-center">
         <FaImages className="me-1" />
-        {album.images.length} photos
+        {album.images.length} {t("photos")}
       </div>
 
       {album.images.length > 0 ? (
@@ -122,14 +124,14 @@ const ViewAlbum: React.FC<ViewAlbumProps> = ({ id, isModal }) => {
                     handleDownload(image.url);
                   }}
                 >
-                  Download
+                  {t("download")}
                 </Button>
               </div>
             </Col>
           ))}
         </Row>
       ) : (
-        <p className="text-muted">This album has no photos.</p>
+        <p className="text-muted">{t("no_photos")}</p>
       )}
 
       {/* Modal to view large image */}
@@ -157,7 +159,7 @@ const ViewAlbum: React.FC<ViewAlbumProps> = ({ id, isModal }) => {
 
               <Image
                 src={album.images[currentIndex].url}
-                alt="Large view"
+                alt={t("large_view")}
                 style={{
                   maxHeight: "80vh",
                   maxWidth: "100%",
