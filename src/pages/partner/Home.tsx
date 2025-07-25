@@ -17,11 +17,10 @@ const PartnerHome: React.FC = () => {
   const [showAlbumModal, setShowAlbumModal] = useState(false);
   const [viewAlbumId, setViewAlbumId] = useState<string | null>(null);
   const [blogs, setBlogs] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [blogStats, setBlogStats] = useState<{ [blogId: string]: { reactions: number; comments: number } }>({});
   const [showViewModal, setShowViewModal] = useState(false);
   const [viewBlogId, setViewBlogId] = useState<string | null>(null);
-  const [showCreateAlbumModal, setShowCreateAlbumModal] = useState(false);
   const [openCommentPostId, setOpenCommentPostId] = useState<string | null>(null);
   const [openReactionPostId, setOpenReactionPostId] = useState<string | null>(null);
 
