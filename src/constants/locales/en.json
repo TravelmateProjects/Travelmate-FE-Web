@@ -44,6 +44,17 @@
     "gender_female": "Female",
     "gender_other": "Other"
   },
+  "reports": {
+    "title": "report",
+    "search": "Search",
+    "search_by_title": "Search by title",
+    "search_by_content": "Search by content",
+    "search_by_reporter": "Search by reporter",
+    "search_by_reported": "Search by reported"
+  },
+  "currentReports":{
+    "titleReport": "report"
+  },
   "partner_home_title": "Partner Home",
   "partner_home_welcome": "Welcome to Travelmate!",
   "loading_data": "Loading data...",
@@ -58,6 +69,13 @@
   "previous": "Previous",
   "next": "Next",
   "report": "Report",
+  "report_reason": "Reason",
+  "report_content": "Content",
+  "createdAt": "Time",
+  "reporter_name": "Reporter",
+  "reported_name": "Reported",
+  "travelHistory.summary": "Travel History",
+  "Action": "Action",
   "create_partner": "Create Partner",
   "create_album": "Create Album",
   "add_new_album": "Add New Album",

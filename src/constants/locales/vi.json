@@ -44,6 +44,17 @@
     "gender_female": "Nữ",
     "gender_other": "Khác"
   },
+  "reports": {
+    "title": "Báo cáo",
+    "search": "Search",
+    "search_by_title": "Search by title",
+    "search_by_content": "Search by content",
+    "search_by_reporter": "Search by reporter",
+    "search_by_reported": "Search by reported"
+  },
+  "currentReports":{
+    "titleReport": "báo cáo"
+  },
   "partner_home_title": "Trang chủ Partner",
   "partner_home_welcome": "Chào mừng bạn đến Travelmate!",
   "loading_data": "Đang tải dữ liệu...",
@@ -58,6 +69,13 @@
   "previous": "Trước",
   "next": "Sau",
   "report": "Báo cáo",
+  "report_reason": "Lý do",
+  "report_content": "Nội dung",
+  "createdAt": "Thời gian",
+  "reporter_name": "Người báo cáo",
+  "reported_name": "Người bị báo cáo",
+  "travelHistory.summary": "Lịch sử du lịch",
+  "Action": "Hành động",
   "create_partner": "Tạo Partner",
   "create_album": "Tạo Bộ Sưu Tập",
   "add_new_album": "Thêm Bộ Sưu Tập Mới",
