@@ -9,7 +9,6 @@ import {
   FiBarChart2,
   FiUsers,
   FiUserPlus,
-  FiSettings,
   FiLogOut,
   FiChevronLeft,
   FiChevronRight,
